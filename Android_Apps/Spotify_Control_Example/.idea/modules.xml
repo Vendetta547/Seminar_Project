@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/MyFirstApp.iml" filepath="$PROJECT_DIR$/MyFirstApp.iml" />
+      <module fileurl="file://C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\MyFirstApp.iml" filepath="C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\MyFirstApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Spotify_Control_Example.iml" filepath="$PROJECT_DIR$/Spotify_Control_Example.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
