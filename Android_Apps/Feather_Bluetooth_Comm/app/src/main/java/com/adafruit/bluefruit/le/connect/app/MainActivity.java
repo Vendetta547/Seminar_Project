@@ -54,7 +54,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adafruit.bluefruit.le.connect.R;
-import com.adafruit.bluefruit.le.connect.app.neopixel.NeopixelActivity;
 import com.adafruit.bluefruit.le.connect.app.settings.SettingsActivity;
 import com.adafruit.bluefruit.le.connect.app.update.FirmwareUpdater;
 import com.adafruit.bluefruit.le.connect.app.update.ReleasesParser;
@@ -91,12 +90,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     // Components
     private final static int kComponentsNameIds[] = {
-            R.string.scan_connectservice_info,
             R.string.scan_connectservice_uart,
-            R.string.scan_connectservice_pinio,
-            R.string.scan_connectservice_controller,
-            R.string.scan_connectservice_beacon,
-            R.string.scan_connectservice_neopixel,
     };
 
     // Activity request codes (used for onActivityResult)
@@ -498,29 +492,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 });
 
     }
-/*
-    public class HeightAnimation extends Animation {
-        protected final int originalHeight;
-        protected final View view;
-        protected float perValue;
 
-        public HeightAnimation(View view, int fromHeight, int toHeight) {
-            this.view = view;
-            this.originalHeight = fromHeight;
-            this.perValue = (toHeight - fromHeight);
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            view.getLayoutParams().height = (int) (originalHeight + perValue * interpolatedTime);
-            view.requestLayout();
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
-    }*/
 
     public void onClickExpandFilters(View view) {
         SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
@@ -636,10 +608,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                             }
                             case R.string.scan_connectservice_beacon: {        // Beacon
                                 mComponentToStartWhenConnected = BeaconActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_neopixel: {       // Neopixel
-                                mComponentToStartWhenConnected = NeopixelActivity.class;
                                 break;
                             }
                         }
@@ -1781,25 +1749,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 }
             });
 
-            /*
-            holder.connectButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onClickDeviceConnect(groupPosition);
-                }
-            });
 
-            convertView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                        onClickScannedDevice(v);
-                        return true;
-                    }
-                    return false;
-                }
-            });
-            */
 
             holder.connectButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
