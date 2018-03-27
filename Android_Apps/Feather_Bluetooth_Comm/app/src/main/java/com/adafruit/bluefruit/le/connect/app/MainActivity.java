@@ -590,24 +590,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 .setItems(items, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         switch (kComponentsNameIds[which]) {
-                            case R.string.scan_connectservice_info: {          // Info
-                                mComponentToStartWhenConnected = InfoActivity.class;
-                                break;
-                            }
                             case R.string.scan_connectservice_uart: {           // Uart
                                 mComponentToStartWhenConnected = UartActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_pinio: {        // PinIO
-                                mComponentToStartWhenConnected = PinIOActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_controller: {    // Controller
-                                mComponentToStartWhenConnected = ControllerActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_beacon: {        // Beacon
-                                mComponentToStartWhenConnected = BeaconActivity.class;
                                 break;
                             }
                         }
@@ -805,10 +789,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
             if (mSelectedDeviceData.type == BluetoothDeviceData.kType_Uart) {      // if is uart, show all the available activities
                 showChooseDeviceServiceDialog(mSelectedDeviceData);
-            } else {                          // if no uart, then go directly to info
-                Log.d(TAG, "No UART service found. Go to InfoActivity");
-                mComponentToStartWhenConnected = InfoActivity.class;
-                connect(device);
             }
         } else {
             Log.w(TAG, "onClickDeviceConnect index does not exist: " + scannedDeviceIndex);
@@ -1077,9 +1057,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         if (mComponentToStartWhenConnected != null) {
             Log.d(TAG, "Start component:" + mComponentToStartWhenConnected);
             Intent intent = new Intent(MainActivity.this, mComponentToStartWhenConnected);
-            if (mComponentToStartWhenConnected == BeaconActivity.class && mSelectedDeviceData != null) {
-                intent.putExtra("rssi", mSelectedDeviceData.rssi);
-            }
             startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
         }
     }
