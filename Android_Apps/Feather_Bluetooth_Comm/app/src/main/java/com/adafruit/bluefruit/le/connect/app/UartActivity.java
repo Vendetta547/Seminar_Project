@@ -326,46 +326,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
 
-    public void onClickCopy(View view) {
-        String text = mBufferTextView.getText().toString(); // mShowDataInHexFormat ? mHexSpanBuffer.toString() : mAsciiSpanBuffer.toString();
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-        if (clipboard != null) {
-            ClipData clip = ClipData.newPlainText("UART", text);
-            clipboard.setPrimaryClip(clip);
-        }
-    }
-
-    public void onClickClear(View view) {
-        mTextSpanBuffer.clear();
-        mDataBufferLastSize = 0;
-        mBufferListAdapter.clear();
-        mBufferTextView.setText("");
-
-        mDataBuffer.clear();
-        mSentBytes = 0;
-        mReceivedBytes = 0;
-        updateUI();
-    }
-
-    public void onClickShare(View view) {
-        String textToSend = mBufferTextView.getText().toString(); // (mShowDataInHexFormat ? mHexSpanBuffer : mAsciiSpanBuffer).toString();
-
-        if (textToSend.length() > 0) {
-
-            Intent sendIntent = new Intent();
-            sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_TEXT, textToSend);
-            sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.uart_share_subject));     // subject will be used if sent to an email app
-            sendIntent.setType("text/*");       // Note: don't use text/plain because dropbox will not appear as destination
-            // startActivity(sendIntent);
-            startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.uart_sharechooser_title)));      // Always show the app-chooser
-        } else {
-            new AlertDialog.Builder(this)
-                    .setMessage(getString(R.string.uart_share_empty))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
-        }
-    }
 
     private void setDisplayFormatToTimestamp(boolean enabled) {
         mIsTimestampDisplayMode = enabled;

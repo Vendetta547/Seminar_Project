@@ -99,33 +99,6 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <Button
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onClickCopy"
-                android:text="@string/uart_copy"
-                android:textColor="@drawable/default_textcolor" />
-
-            <Button
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onClickShare"
-                android:text="@string/uart_share"
-                android:textColor="@drawable/default_textcolor" />
-
-            <Button
-                style="?android:attr/borderlessButtonStyle"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:onClick="onClickClear"
-                android:text="@string/uart_clear"
-                android:textColor="@drawable/default_textcolor" />
-
         </LinearLayout>
     </LinearLayout>
 
