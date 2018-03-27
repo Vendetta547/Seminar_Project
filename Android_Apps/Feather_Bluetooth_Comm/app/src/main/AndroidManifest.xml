@@ -126,14 +126,6 @@
             android:label="@string/title_activity_beacon"
             android:windowSoftInputMode="stateVisible|adjustPan" />
         <activity
-            android:name=".app.ColorPickerActivity"
-            android:label="@string/title_activity_color_picker"
-            android:parentActivityName=".app.ControllerActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.ControllerActivity" />
-        </activity>
-        <activity
             android:name=".app.settings.MqttUartSettingsActivity"
             android:label="@string/title_activity_mqtt"
             android:parentActivityName=".app.UartActivity">

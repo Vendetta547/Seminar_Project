@@ -118,8 +118,7 @@ public class ControllerActivity extends UartInterfaceActivity implements SensorE
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (position == 0) {
-                    Intent intent = new Intent(ControllerActivity.this, ColorPickerActivity.class);
-                    startActivityForResult(intent, kActivityRequestCode_ColorPickerActivity);
+
                 } else {
                     Intent intent = new Intent(ControllerActivity.this, PadActivity.class);
                     startActivityForResult(intent, kActivityRequestCode_PadActivity);
