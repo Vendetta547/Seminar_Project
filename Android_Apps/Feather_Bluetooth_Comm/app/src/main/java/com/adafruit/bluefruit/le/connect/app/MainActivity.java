@@ -115,8 +115,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private EditText mFiltersNameEditText;
     private SeekBar mFiltersRssiSeekBar;
     private TextView mFiltersRssiValueTextView;
-    private CheckBox mFiltersUnnamedCheckBox;
-    private CheckBox mFiltersUartCheckBox;
 
     // Data
     private BleManager mBleManager;
@@ -218,22 +216,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             }
         });
         mFiltersRssiValueTextView = (TextView) findViewById(R.id.filtersRssiValueTextView);
-        mFiltersUnnamedCheckBox = (CheckBox) findViewById(R.id.filtersUnnamedCheckBox);
-        mFiltersUnnamedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPeripheralList.setFilterUnnamedEnabled(isChecked);
-                updateFilters();
-            }
-        });
-        mFiltersUartCheckBox = (CheckBox) findViewById(R.id.filtersUartCheckBox);
-        mFiltersUartCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPeripheralList.setFilterOnlyUartEnabled(isChecked);
-                updateFilters();
-            }
-        });
+
 
         // Filters
         SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
@@ -242,8 +225,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         updateFiltersTitle();
         mFiltersNameEditText.setText(mPeripheralList.getFilterName());
         setRssiSliderValue(mPeripheralList.getFilterRssiValue());
-        mFiltersUnnamedCheckBox.setChecked(mPeripheralList.isFilterUnnamedEnabled());
-        mFiltersUartCheckBox.setChecked(mPeripheralList.isFilterOnlyUartEnabled());
 
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
@@ -468,15 +449,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
         mFiltersExpandImageView.setImageResource(isOpen ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
 
-        /*
-        float paddingTop = MetricsUtils.convertDpToPixel(this, (float) (isOpen ? 200 : 44));
-        mScannedDevicesListView.setPadding(0, (int) paddingTop, 0, 0);
-
-        mFiltersPanelView.setVisibility(View.VISIBLE);
-        HeightAnimation heightAnim = new HeightAnimation(mFiltersPanelView, isOpen?0:200, isOpen?200:0);
-        heightAnim.setDuration(300);
-        mFiltersPanelView.startAnimation(heightAnim);
-*/
 
         mFiltersPanelView.setVisibility(isOpen ? View.VISIBLE : View.GONE);
 
@@ -501,14 +473,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         openFiltersPanel(!filtersIsPanelOpen, true);
     }
 
-    public void onClickRemoveFilters(View view) {
-        mPeripheralList.setDefaultFilters();
-        mFiltersNameEditText.setText(mPeripheralList.getFilterName());
-        setRssiSliderValue(mPeripheralList.getFilterRssiValue());
-        mFiltersUnnamedCheckBox.setChecked(mPeripheralList.isFilterUnnamedEnabled());
-        mFiltersUartCheckBox.setChecked(mPeripheralList.isFilterOnlyUartEnabled());
-        updateFilters();
-    }
 
     public void onClickFilterNameSettings(View view) {
         PopupMenu popup = new PopupMenu(this, view);
