@@ -108,13 +108,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private AlertDialog mConnectingDialog;
-    private View mFiltersPanelView;
-    private ImageView mFiltersExpandImageView;
-    private ImageButton mFiltersClearButton;
-    private TextView mFiltersTitleTextView;
-    private EditText mFiltersNameEditText;
-    private SeekBar mFiltersRssiSeekBar;
-    private TextView mFiltersRssiValueTextView;
 
     // Data
     private BleManager mBleManager;
@@ -174,57 +167,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 }, 500);
             }
         });
-
-
-        mFiltersPanelView = findViewById(R.id.filtersExpansionView);
-        mFiltersExpandImageView = (ImageView) findViewById(R.id.filtersExpandImageView);
-        mFiltersClearButton = (ImageButton) findViewById(R.id.filtersClearButton);
-        mFiltersTitleTextView = (TextView) findViewById(R.id.filtersTitleTextView);
-        mFiltersNameEditText = (EditText) findViewById(R.id.filtersNameEditText);
-        mFiltersNameEditText.addTextChangedListener(new TextWatcher() {
-
-            public void afterTextChanged(Editable s) {
-                String text = s.toString();
-                mPeripheralList.setFilterName(text);
-                updateFilters();
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-        });
-        mFiltersRssiSeekBar = (SeekBar) findViewById(R.id.filtersRssiSeekBar);
-        mFiltersRssiSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int rssiValue = -seekBar.getProgress();
-                mPeripheralList.setFilterRssiValue(rssiValue);
-                updateRssiValue();
-                updateFilters();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mFiltersRssiValueTextView = (TextView) findViewById(R.id.filtersRssiValueTextView);
-
-
-        // Filters
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        boolean filtersIsPanelOpen = preferences.getBoolean(kPreferences_filtersPanelOpen, false);
-        openFiltersPanel(filtersIsPanelOpen, false);
-        updateFiltersTitle();
-        mFiltersNameEditText.setText(mPeripheralList.getFilterName());
-        setRssiSliderValue(mPeripheralList.getFilterRssiValue());
+        
 
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
@@ -441,99 +384,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     // endregion
 
 
-    // region Filters
-    private void openFiltersPanel(final boolean isOpen, boolean animated) {
-        SharedPreferences.Editor preferencesEditor = getSharedPreferences(kPreferences, MODE_PRIVATE).edit();
-        preferencesEditor.putBoolean(kPreferences_filtersPanelOpen, isOpen);
-        preferencesEditor.apply();
-
-        mFiltersExpandImageView.setImageResource(isOpen ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
-
-
-        mFiltersPanelView.setVisibility(isOpen ? View.VISIBLE : View.GONE);
-
-        mFiltersPanelView.animate()
-                .alpha(isOpen ? 1.0f : 0)
-                .setDuration(300)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        mFiltersPanelView.setVisibility(isOpen ? View.VISIBLE : View.GONE);
-                    }
-                });
-
-    }
-
-
-    public void onClickExpandFilters(View view) {
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        boolean filtersIsPanelOpen = preferences.getBoolean(kPreferences_filtersPanelOpen, false);
-
-        openFiltersPanel(!filtersIsPanelOpen, true);
-    }
-
-
-    public void onClickFilterNameSettings(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                boolean processed = true;
-                switch (item.getItemId()) {
-                    case R.id.scanfilter_name_contains:
-                        mPeripheralList.setFilterNameExact(false);
-                        break;
-                    case R.id.scanfilter_name_exact:
-                        mPeripheralList.setFilterNameExact(true);
-                        break;
-                    case R.id.scanfilter_name_sensitive:
-                        mPeripheralList.setFilterNameCaseInsensitive(false);
-                        break;
-                    case R.id.scanfilter_name_insensitive:
-                        mPeripheralList.setFilterNameCaseInsensitive(true);
-                        break;
-                    default:
-                        processed = false;
-                        break;
-                }
-                updateFilters();
-                return processed;
-            }
-        });
-        MenuInflater inflater = popup.getMenuInflater();
-        Menu menu = popup.getMenu();
-        inflater.inflate(R.menu.menu_scan_filters_name, menu);
-        final boolean isFilterNameExact = mPeripheralList.isFilterNameExact();
-        menu.findItem(isFilterNameExact ? R.id.scanfilter_name_exact : R.id.scanfilter_name_contains).setChecked(true);
-        final boolean isFilterNameCaseInsensitive = mPeripheralList.isFilterNameCaseInsensitive();
-        menu.findItem(isFilterNameCaseInsensitive ? R.id.scanfilter_name_insensitive : R.id.scanfilter_name_sensitive).setChecked(true);
-        popup.show();
-    }
-
-
-    private void updateFiltersTitle() {
-        final String filtersTitle = mPeripheralList.filtersDescription();
-        mFiltersTitleTextView.setText(filtersTitle != null ? String.format(Locale.ENGLISH, getString(R.string.scan_filters_title_filter_format), filtersTitle) : getString(R.string.scan_filters_title_nofilter));
-        mFiltersClearButton.setVisibility(mPeripheralList.isAnyFilterEnabled() ? View.VISIBLE : View.GONE);
-    }
-
-    private void updateFilters() {
-        updateFiltersTitle();
-        mScannedDevicesAdapter.notifyDataSetChanged();
-    }
-
-    private void setRssiSliderValue(int value) {
-        mFiltersRssiSeekBar.setProgress(-value);
-        updateRssiValue();
-    }
-
-    private void updateRssiValue() {
-        final int value = -mFiltersRssiSeekBar.getProgress();
-        mFiltersRssiValueTextView.setText(String.format(Locale.ENGLISH, getString(R.string.scan_filters_rssi_value_format), value));
-    }
-
-    // endregion
 
     private void resumeScanning() {
         if (mIsScanPaused) {
