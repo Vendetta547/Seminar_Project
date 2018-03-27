@@ -1,8 +1,6 @@
 package com.adafruit.bluefruit.le.connect.app;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -27,29 +25,20 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
-import android.text.Editable;
 import android.text.Html;
 import android.text.Spanned;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -167,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 }, 500);
             }
         });
-        
+
 
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
@@ -1145,92 +1134,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mIsOnlyUartEnabled = preferences.getBoolean(kPreferences_filtersUartEnabled, false);
         }
 
-        String getFilterName() {
-            return mFilterName;
-        }
-
-        void setFilterName(String name) {
-            mFilterName = name;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putString(kPreferences_filtersName, name);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterNameExact() {
-            return mIsFilterNameExact;
-        }
-
-        void setFilterNameExact(boolean exact) {
-            mIsFilterNameExact = exact;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersIsNameExact, exact);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterNameCaseInsensitive() {
-            return mIsFilterNameCaseInsensitive;
-        }
-
-        void setFilterNameCaseInsensitive(boolean caseInsensitive) {
-            mIsFilterNameCaseInsensitive = caseInsensitive;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersIsNameCaseInsensitive, caseInsensitive);
-            preferencesEditor.apply();
-        }
-
-        int getFilterRssiValue() {
-            return mRssiFilterValue;
-        }
-
-        void setFilterRssiValue(int value) {
-            mRssiFilterValue = value;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putInt(kPreferences_filtersRssi, value);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterUnnamedEnabled() {
-            return mIsUnnamedEnabled;
-        }
-
-        void setFilterUnnamedEnabled(boolean enabled) {
-            mIsUnnamedEnabled = enabled;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersUnnamedEnabled, enabled);
-            preferencesEditor.apply();
-        }
-
-
-        boolean isFilterOnlyUartEnabled() {
-            return mIsOnlyUartEnabled;
-        }
-
-        void setFilterOnlyUartEnabled(boolean enabled) {
-            mIsOnlyUartEnabled = enabled;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersUartEnabled, enabled);
-            preferencesEditor.apply();
-        }
-
-
-        void setDefaultFilters() {
-            mFilterName = null;
-            mIsFilterNameExact = false;
-            mIsFilterNameCaseInsensitive = true;
-            mRssiFilterValue = kMaxRssiValue;
-            mIsUnnamedEnabled = true;
-            mIsOnlyUartEnabled = false;
-        }
-
-        boolean isAnyFilterEnabled() {
-            return (mFilterName != null && !mFilterName.isEmpty()) || mRssiFilterValue > kMaxRssiValue || mIsOnlyUartEnabled || !mIsUnnamedEnabled;
-        }
 
         ArrayList<BluetoothDeviceData> filteredPeripherals(boolean forceUpdate) {
             if (mIsFilterDirty || forceUpdate) {
@@ -1302,43 +1205,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             }
 
             return peripherals;
-        }
-
-        String filtersDescription() {
-            String filtersTitle = null;
-
-            if (mFilterName != null && !mFilterName.isEmpty()) {
-                filtersTitle = mFilterName;
-            }
-
-            if (mRssiFilterValue > kMaxRssiValue) {
-                String rssiString = String.format(Locale.ENGLISH, getString(R.string.scan_filters_name_rssi_format), mRssiFilterValue);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + rssiString;
-                } else {
-                    filtersTitle = rssiString;
-                }
-            }
-
-            if (!mIsUnnamedEnabled) {
-                String namedString = getString(R.string.scan_filters_name_named);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + namedString;
-                } else {
-                    filtersTitle = namedString;
-                }
-            }
-
-            if (mIsOnlyUartEnabled) {
-                String uartString = getString(R.string.scan_filters_name_uart);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + uartString;
-                } else {
-                    filtersTitle = uartString;
-                }
-            }
-
-            return filtersTitle;
         }
     }
 
@@ -1649,7 +1515,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         private FirmwareUpdater mFirmwareUpdater;
         private String mLatestCheckedDeviceAddress;
         private BluetoothDeviceData mSelectedDeviceData;
-        //private PeripheralList mPeripheralList;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -1670,7 +1535,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             fm.beginTransaction().add(mRetainedDataFragment, TAG).commitAllowingStateLoss();        // http://stackoverflow.com/questions/7575921/illegalstateexception-can-not-perform-this-action-after-onsaveinstancestate-h
 
             mScannedDevices = new ArrayList<>();
-            // mPeripheralList = new PeripheralList();
 
         } else {
             // Restore status
@@ -1680,7 +1544,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mFirmwareUpdater = mRetainedDataFragment.mFirmwareUpdater;
             mLatestCheckedDeviceAddress = mRetainedDataFragment.mLatestCheckedDeviceAddress;
             mSelectedDeviceData = mRetainedDataFragment.mSelectedDeviceData;
-            //mPeripheralList = mRetainedDataFragment.mPeripheralList;
 
             if (mFirmwareUpdater != null) {
                 mFirmwareUpdater.changedParentActivity(this);       // set the new activity
@@ -1695,7 +1558,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         mRetainedDataFragment.mFirmwareUpdater = mFirmwareUpdater;
         mRetainedDataFragment.mLatestCheckedDeviceAddress = mLatestCheckedDeviceAddress;
         mRetainedDataFragment.mSelectedDeviceData = mSelectedDeviceData;
-        //mRetainedDataFragment.mPeripheralList = mPeripheralList;
     }
     // endregion
 }
