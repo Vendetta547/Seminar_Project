@@ -22,8 +22,6 @@ import java.util.UUID;
 
 
 public class IBeaconFragment extends Fragment {
-    // Log
-    private final static String TAG = IBeaconFragment.class.getSimpleName();
 
     // Constants
     private final static boolean kPersistValues = true;
@@ -51,14 +49,6 @@ public class IBeaconFragment extends Fragment {
     private static final String ARG_PARAM1 = "param1";
 
 
-    public static IBeaconFragment newInstance(int rssi) {
-        IBeaconFragment fragment = new IBeaconFragment();
-        Bundle args = new Bundle();
-        args.putInt(ARG_PARAM1, rssi);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
     public IBeaconFragment() {
         // Required empty public constructor
     }
@@ -69,14 +59,6 @@ public class IBeaconFragment extends Fragment {
         if (getArguments() != null) {
             mRssi = getArguments().getInt(ARG_PARAM1);
         }
-    }
-
-    public boolean onBackPressed() {
-        if (mCustomKeyboard.isCustomKeyboardVisible()) {
-            mCustomKeyboard.hideCustomKeyboard();
-            return true;
-        }
-        return false;
     }
 
     @Override
@@ -270,10 +252,6 @@ public class IBeaconFragment extends Fragment {
 
     public String getRssi() {
         return mRssiEditText.getText().toString();
-    }
-
-    public void setRssi(int rssi) {
-        mRssiEditText.setText("" + rssi);
     }
 
     public interface OnFragmentInteractionListener {

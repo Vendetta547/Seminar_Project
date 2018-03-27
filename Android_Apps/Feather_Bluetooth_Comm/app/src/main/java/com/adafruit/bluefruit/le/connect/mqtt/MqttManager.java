@@ -36,8 +36,6 @@ public class MqttManager implements IMqttActionListener, MqttCallback, MqttTrace
     }
 
     public static int MqqtQos_AtMostOnce = 0;
-    public static int MqqtQos_AtLeastOnce = 1;
-    public static int MqqtQos_ExactlyOnce = 2;
 
     // Data
     private MqttAndroidClient mMqttClient;

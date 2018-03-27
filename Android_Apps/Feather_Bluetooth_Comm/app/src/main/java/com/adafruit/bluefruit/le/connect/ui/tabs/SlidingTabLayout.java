@@ -68,14 +68,6 @@ public class SlidingTabLayout extends HorizontalScrollView {
 
     private int mTitleOffset;
 
-    private int mTabViewLayoutId;
-    private int mTabViewTextViewId;
-    private boolean mDistributeEvenly;
-
-    private ViewPager mViewPager;
-    private SparseArray<String> mContentDescriptions = new SparseArray<String>();
-    private ViewPager.OnPageChangeListener mViewPagerPageChangeListener;
-
     private final SlidingTabStrip mTabStrip;
 
     public SlidingTabLayout(Context context) {
@@ -101,40 +93,9 @@ public class SlidingTabLayout extends HorizontalScrollView {
     }
 
 
-
-    /**
-     * Create a default view to be used for tabs. This is called if a custom tab view is not set via
-     * {@link #setCustomTabView(int, int)}.
-     */
-    protected TextView createDefaultTabView(Context context) {
-        TextView textView = new TextView(context);
-        textView.setGravity(Gravity.CENTER);
-        textView.setTextSize(TypedValue.COMPLEX_UNIT_SP, TAB_VIEW_TEXT_SIZE_SP);
-        textView.setTypeface(Typeface.DEFAULT_BOLD);
-        textView.setLayoutParams(new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
-
-        TypedValue outValue = new TypedValue();
-        getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground,
-                outValue, true);
-        textView.setBackgroundResource(outValue.resourceId);
-        textView.setAllCaps(true);
-
-        int padding = (int) (TAB_VIEW_PADDING_DIPS * getResources().getDisplayMetrics().density);
-        textView.setPadding(padding, padding, padding, padding);
-
-        return textView;
-    }
-
-
-
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-
-        if (mViewPager != null) {
-            scrollToTab(mViewPager.getCurrentItem(), 0);
-        }
     }
 
     private void scrollToTab(int tabIndex, int positionOffset) {

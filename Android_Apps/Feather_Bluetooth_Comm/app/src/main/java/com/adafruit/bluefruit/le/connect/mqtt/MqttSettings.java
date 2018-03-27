@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import com.adafruit.bluefruit.le.connect.app.settings.MqttUartSettingsActivity;
 
 public class MqttSettings {
-    // Log
-    private final static String TAG = MqttSettings.class.getSimpleName();
 
     // Singleton
     private static MqttSettings mInstance = null;

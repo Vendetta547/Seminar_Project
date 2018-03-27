@@ -25,8 +25,6 @@ import com.adafruit.bluefruit.le.connect.ble.BleUtils;
 
 
 public class URIBeaconFragment extends Fragment implements ShortenerAsyncTask.ShortenerListener {
-    // Log
-    private final static String TAG = URIBeaconFragment.class.getSimpleName();
 
     // Constants
     private final static boolean kPersistValues = true;
@@ -44,14 +42,6 @@ public class URIBeaconFragment extends Fragment implements ShortenerAsyncTask.Sh
     // Data
     private BitlyShortenerAsyncTask mCurrentShorteningTask;
     private OnFragmentInteractionListener mListener;
-
-    public static URIBeaconFragment newInstance() {
-        URIBeaconFragment fragment = new URIBeaconFragment();
-        Bundle args = new Bundle();
-
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     public URIBeaconFragment() {
         // Required empty public constructor

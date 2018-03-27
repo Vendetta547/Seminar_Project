@@ -161,17 +161,6 @@ public class GraphicOverlay<T extends GraphicOverlay.Graphic> extends View {
     }
 
     /**
-     * Returns the first (oldest) graphic added.  This is used
-     * to get the barcode that was detected first.
-     * @return graphic containing the barcode, or null if no barcodes are detected.
-     */
-    public T getFirstGraphic() {
-        synchronized (mLock) {
-            return mFirstGraphic;
-        }
-    }
-
-    /**
      * Sets the camera attributes for size and facing direction, which informs how to transform
      * image coordinates later.
      */

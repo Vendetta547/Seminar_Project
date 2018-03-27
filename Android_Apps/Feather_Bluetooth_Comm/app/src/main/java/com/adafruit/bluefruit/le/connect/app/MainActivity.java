@@ -74,9 +74,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
 
-    private final static String kPreferences = "MainActivity_prefs";
-    private final static String kPreferences_filtersPanelOpen = "filtersPanelOpen";
-
     // Components
     private final static int kComponentsNameIds[] = {
             R.string.scan_connectservice_uart,
@@ -1118,8 +1115,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         private boolean mIsOnlyUartEnabled;
         private ArrayList<BluetoothDeviceData> mCachedFilteredPeripheralList;
         private boolean mIsFilterDirty;
-
-        private SharedPreferences.Editor preferencesEditor = getSharedPreferences(kPreferences, MODE_PRIVATE).edit();
 
         PeripheralList() {
             mIsFilterDirty = true;

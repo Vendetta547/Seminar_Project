@@ -15,7 +15,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.UUID;
 
 public class BleManager implements BleGattExecutor.BleExecutorListener {
@@ -46,10 +45,6 @@ public class BleManager implements BleGattExecutor.BleExecutorListener {
             mInstance = new BleManager(context);
         }
         return mInstance;
-    }
-
-    public int getState() {
-        return mConnectionState;
     }
 
     public BluetoothDevice getConnectedDevice() {
@@ -216,10 +211,6 @@ public class BleManager implements BleGattExecutor.BleExecutorListener {
         readService(service, characteristicUUID, null);
     }
 
-    public void readDescriptor(BluetoothGattService service, String characteristicUUID, String descriptorUUID) {
-        readService(service, characteristicUUID, descriptorUUID);
-    }
-
     private void readService(BluetoothGattService service, String characteristicUUID, String descriptorUUID) {
         if (service != null) {
             if (mAdapter == null || mGatt == null) {
@@ -288,77 +279,10 @@ public class BleManager implements BleGattExecutor.BleExecutorListener {
         return isReadable;
     }
 
-    public boolean isCharacteristicNotifiable(BluetoothGattService service, String characteristicUUIDString) {
-        final int properties = getCharacteristicProperties(service, characteristicUUIDString);
-        final boolean isNotifiable = (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
-        return isNotifiable;
-    }
-
-    // Permissions
-    private int getDescriptorPermissions(BluetoothGattService service, String characteristicUUIDString, String descriptorUUIDString) {
-        final UUID characteristicUuid = UUID.fromString(characteristicUUIDString);
-        BluetoothGattCharacteristic characteristic = service.getCharacteristic(characteristicUuid);
-
-        int permissions = 0;
-        if (characteristic != null) {
-            final UUID descriptorUuid = UUID.fromString(descriptorUUIDString);
-            BluetoothGattDescriptor descriptor = characteristic.getDescriptor(descriptorUuid);
-            if (descriptor != null) {
-                permissions = descriptor.getPermissions();
-            }
-        }
-
-        return permissions;
-    }
-
-    public boolean isDescriptorReadable(BluetoothGattService service, String characteristicUUIDString, String descriptorUUIDString) {
-        final int permissions = getDescriptorPermissions(service, characteristicUUIDString, descriptorUUIDString);
-        final boolean isReadable = (permissions & BluetoothGattCharacteristic.PERMISSION_READ) != 0;
-        return isReadable;
-    }
-
-    /**
-     * Retrieves a list of supported GATT services on the connected device. This should be
-     * invoked only after {@code BluetoothGatt#discoverServices()} completes successfully.
-     *
-     * @return A {@code List} of supported services.
-     */
-    public List<BluetoothGattService> getSupportedGattServices() {
-        if (mGatt != null) {
-            return mGatt.getServices();
-        } else {
-            return null;
-        }
-    }
-
     public BluetoothGattService getGattService(String uuid) {
         if (mGatt != null) {
             final UUID serviceUuid = UUID.fromString(uuid);
             return mGatt.getService(serviceUuid);
-        } else {
-            return null;
-        }
-    }
-
-    public BluetoothGattService getGattService(String uuid, int instanceId) {
-        if (mGatt != null) {
-            List<BluetoothGattService> services = getSupportedGattServices();
-            boolean found = false;
-            int i = 0;
-            while (i < services.size() && !found) {
-                BluetoothGattService service = services.get(i);
-                if (service.getUuid().toString().equalsIgnoreCase(uuid) && service.getInstanceId() == instanceId) {
-                    found = true;
-                } else {
-                    i++;
-                }
-            }
-
-            if (found) {
-                return services.get(i);
-            } else {
-                return null;
-            }
         } else {
             return null;
         }
