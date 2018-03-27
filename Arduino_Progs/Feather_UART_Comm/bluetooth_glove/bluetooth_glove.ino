@@ -181,7 +181,7 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
-    // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+  /*  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
     buttonState = digitalRead(buttonPin);
     if (buttonState != lastButtonState) {
       if (buttonState == HIGH) {
@@ -196,7 +196,7 @@ void loop(void)
     lastButtonState = buttonState;
 
   // Display prompt
-  /*Serial.println(F("keyboard > "));
+  /*Serial.println(F("keyboard > "));*/
 
   // Check for user input and echo it back if anything was found
   char keys[BUFSIZE+1];
@@ -214,7 +214,7 @@ void loop(void)
   }else
   {
     Serial.println( F("FAILED!") );
-  }*/
+  }
 }
 
 /**************************************************************************/
