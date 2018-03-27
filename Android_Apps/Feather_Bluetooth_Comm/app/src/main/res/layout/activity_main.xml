@@ -45,7 +45,6 @@
         android:orientation="vertical">
 
         <FrameLayout
-            android:id="@+id/filtersView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="#eeeeee">
@@ -71,7 +70,6 @@
                         android:orientation="horizontal">
 
                         <TextView
-                            android:id="@+id/filtersTitleTextView"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:singleLine="true"
@@ -82,7 +80,6 @@
                     </LinearLayout>
 
                     <ImageButton
-                        android:id="@+id/filtersClearButton"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
@@ -92,7 +89,6 @@
                         tools:ignore="ContentDescription" />
 
                     <ImageView
-                        android:id="@+id/filtersExpandImageView"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="@android:color/transparent"
@@ -103,7 +99,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/filtersExpansionView"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
@@ -122,7 +117,6 @@
                             android:text="@string/scan_filters_name_title" />
 
                         <EditText
-                            android:id="@+id/filtersNameEditText"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
@@ -158,7 +152,6 @@
                             android:text="@string/scan_filters_rssi_title" />
 
                         <SeekBar
-                            android:id="@+id/filtersRssiSeekBar"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="-12dp"
@@ -166,7 +159,6 @@
                             android:max="100" />
 
                         <TextView
-                            android:id="@+id/filtersRssiValueTextView"
                             android:layout_width="70dp"
                             android:layout_height="wrap_content"
                             android:text="@string/scan_filters_rssi_value_format" />
@@ -174,13 +166,11 @@
                     </LinearLayout>
 
                     <CheckBox
-                        android:id="@+id/filtersUnnamedCheckBox"
                         android:layout_width="match_parent"
                         android:layout_height="40dp"
                         android:text="@string/scan_filters_unnamed" />
 
                     <CheckBox
-                        android:id="@+id/filtersUartCheckBox"
                         android:layout_width="match_parent"
                         android:layout_height="40dp"
                         android:text="@string/scan_filters_onlyuart" />

@@ -1275,8 +1275,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             String address = deviceData.device.getAddress();
             result.append(getString(R.string.scan_device_address) + ": <b>" + (address == null ? "" : address) + "</b><br>");
 
-            String uri = UriBeaconUtils.getUriFromAdvertisingPacket(deviceData.scanRecord) + "</b><br>";
-            result.append(getString(R.string.scan_device_uribeacon_uri)).append(": <b>").append(uri);
+           // String uri = UriBeaconUtils.getUriFromAdvertisingPacket(deviceData.scanRecord) + "</b><br>";
+           // result.append(getString(R.string.scan_device_uribeacon_uri)).append(": <b>").append(uri);
 
             result.append(getString(R.string.scan_device_txpower)).append(": <b>").append(deviceData.txPower).append("</b>");
 

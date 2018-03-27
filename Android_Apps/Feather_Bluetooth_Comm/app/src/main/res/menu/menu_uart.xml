@@ -17,7 +17,7 @@
         app:showAsAction="always" />
 
 
-    <group android:id="@+id/uartControls">
+    <group>
 
         <item
             android:id="@+id/action_displaymode"
@@ -25,9 +25,7 @@
             app:showAsAction="never">
 
             <menu>
-                <group
-                    android:id="@+id/displayMode"
-                    android:checkableBehavior="single">
+                <group android:checkableBehavior="single">
                     <item
                         android:id="@+id/action_displaymode_timestamp"
                         android:title="@string/uart_displaymode_timestamp"
@@ -46,9 +44,7 @@
             app:showAsAction="never">
 
             <menu>
-                <group
-                    android:id="@+id/dataMode"
-                    android:checkableBehavior="single">
+                <group android:checkableBehavior="single">
                     <item
                         android:id="@+id/action_datamode_ascii"
                         android:title="@string/uart_format_ascii"
@@ -62,9 +58,7 @@
             </menu>
         </item>
 
-        <group
-            android:id="@+id/uartUserTextControls"
-            android:checkableBehavior="all">
+        <group android:checkableBehavior="all">
             <item
                 android:id="@+id/action_echo"
                 android:title="@string/uart_action_echo"
@@ -81,9 +75,7 @@
             app:showAsAction="never">
 
             <menu>
-                <group
-                    android:id="@+id/eolMode"
-                    android:checkableBehavior="single">
+                <group android:checkableBehavior="single">
                     <item
                         android:id="@+id/action_eolmode_n"
                         android:title="@string/uart_eolmode_n"
@@ -106,7 +98,7 @@
     </group>
 
 
-    <group android:id="@+id/extra">
+    <group>
         <item
             android:id="@+id/action_connected_settings"
             android:icon="@drawable/ic_settings_white_24dp"
