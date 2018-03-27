@@ -1,3 +1,18 @@
+/* button code example */
+/*  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
+    buttonState = digitalRead(buttonPin);
+    if (buttonState != lastButtonState) {
+      if (buttonState == HIGH) {
+        //
+      } else {
+        //Serial.println("LOW");
+        ble.print("AT+BleKeyboard=");
+        ble.println("Test message from button");
+      }
+      delay(50);
+    }
+    lastButtonState = buttonState;
+
 /*********************************************************************
  This is an example for our nRF51822 based Bluefruit LE modules
 
@@ -11,11 +26,6 @@
  All text above, and the splash screen below must be included in
  any redistribution
 *********************************************************************/
-
-/*
-  This example shows how to send HID (keyboard/mouse/etc) data via BLE
-  Note that not all devices support BLE keyboard! BLE Keyboard != Bluetooth Keyboard
-*/
 
 #include <Arduino.h>
 #include <SPI.h>
@@ -56,11 +66,14 @@
                               bonding data stored on the chip, meaning the
                               central device won't be able to reconnect.
     MINIMUM_FIRMWARE_VERSION  Minimum firmware version to have some new features
+    MODE_LED_BEHAVIOUR        LED activity, valid options are
+                              "DISABLE" or "MODE" or "BLEUART" or
+                              "HWUART"  or "SPI"  or "MANUAL"
     -----------------------------------------------------------------------*/
-    #define FACTORYRESET_ENABLE         0
+    #define FACTORYRESET_ENABLE         1
     #define MINIMUM_FIRMWARE_VERSION    "0.6.6"
+    #define MODE_LED_BEHAVIOUR          "MODE"
 /*=========================================================================*/
-
 
 // Create the bluefruit object, either software serial...uncomment these lines
 /*
@@ -71,7 +84,7 @@ Adafruit_BluefruitLE_UART ble(bluefruitSS, BLUEFRUIT_UART_MODE_PIN,
 */
 
 /* ...or hardware serial, which does not need the RTS/CTS pins. Uncomment this line */
-// Adafruit_BluefruitLE_UART ble(BLUEFRUIT_HWSERIAL_NAME, BLUEFRUIT_UART_MODE_PIN);
+// Adafruit_BluefruitLE_UART ble(Serial1, BLUEFRUIT_UART_MODE_PIN);
 
 /* ...hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
 Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
@@ -80,6 +93,7 @@ Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_
 //Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_SCK, BLUEFRUIT_SPI_MISO,
 //                             BLUEFRUIT_SPI_MOSI, BLUEFRUIT_SPI_CS,
 //                             BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
+
 
 // A small helper
 void error(const __FlashStringHelper*err) {
@@ -93,20 +107,13 @@ void error(const __FlashStringHelper*err) {
             automatically on startup)
 */
 /**************************************************************************/
-
-const int buttonPin = 12;     // the number of the pushbutton pin
-int buttonState = 0;         // current state of the button
-int lastButtonState = 0;     // previous state of the button
-
 void setup(void)
 {
-  // initialize the pushbutton pin as an input:
-  pinMode(buttonPin, INPUT);
   while (!Serial);  // required for Flora & Micro
   delay(500);
 
   Serial.begin(115200);
-  Serial.println(F("Adafruit Bluefruit HID Keyboard Example"));
+  Serial.println(F("Adafruit Bluefruit Command Mode Example"));
   Serial.println(F("---------------------------------------"));
 
   /* Initialise the module */
@@ -134,44 +141,26 @@ void setup(void)
   /* Print Bluefruit information */
   ble.info();
 
-  /* Change the device name to make it easier to find */
-  Serial.println(F("Setting device name to 'Bluetooth Glove': "));
-  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Bluetooth Glove" )) ) {
-    error(F("Could not set device name?"));
+  Serial.println(F("Please use Adafruit Bluefruit LE app to connect in UART mode"));
+  Serial.println(F("Then Enter characters to send to Bluefruit"));
+  Serial.println();
+
+  ble.verbose(false);  // debug info is a little annoying after this point!
+
+  /* Wait for connection */
+  while (! ble.isConnected()) {
+      delay(500);
   }
 
-  /* Enable HID Service */
-  Serial.println(F("Enable HID Service (including Keyboard): "));
+  // LED Activity command is only supported from 0.6.6
   if ( ble.isVersionAtLeast(MINIMUM_FIRMWARE_VERSION) )
   {
-    if ( !ble.sendCommandCheckOK(F( "AT+BleHIDEn=On" ))) {
-      error(F("Could not enable Keyboard"));
-    }
-  }else
-  {
-    if (! ble.sendCommandCheckOK(F( "AT+BleKeyboardEn=On"  ))) {
-      error(F("Could not enable Keyboard"));
-    }
+    // Change Mode LED Activity
+    Serial.println(F("******************************"));
+    Serial.println(F("Change LED activity to " MODE_LED_BEHAVIOUR));
+    ble.sendCommandCheckOK("AT+HWModeLED=" MODE_LED_BEHAVIOUR);
+    Serial.println(F("******************************"));
   }
-
-  /* Add or remove service requires a reset */
-  Serial.println(F("Performing a SW reset (service changes require a reset): "));
-  if (! ble.reset() ) {
-    error(F("Couldn't reset??"));
-  }
-
-  Serial.println();
-  Serial.println(F("Go to your phone's Bluetooth settings to pair your device"));
-  Serial.println(F("then open an application that accepts keyboard input"));
-
-  Serial.println();
-  Serial.println(F("Enter the character(s) to send:"));
-  Serial.println(F("- \\r for Enter"));
-  Serial.println(F("- \\n for newline"));
-  Serial.println(F("- \\t for tab"));
-  Serial.println(F("- \\b for backspace"));
-
-  Serial.println();
 }
 
 /**************************************************************************/
@@ -181,40 +170,34 @@ void setup(void)
 /**************************************************************************/
 void loop(void)
 {
-  /*  // check if the pushbutton is pressed. If it is, the buttonState is HIGH:
-    buttonState = digitalRead(buttonPin);
-    if (buttonState != lastButtonState) {
-      if (buttonState == HIGH) {
-        //
-      } else {
-        //Serial.println("LOW");
-        ble.print("AT+BleKeyboard=");
-        ble.println("Test message from button");
-      }
-      delay(50);
+  // Check for user input
+  char inputs[BUFSIZE+1];
+
+  if ( getUserInput(inputs, BUFSIZE) )
+  {
+    // Send characters to Bluefruit
+    Serial.print("[Send] ");
+    Serial.println(inputs);
+
+    ble.print("AT+BLEUARTTX=");
+    ble.println(inputs);
+
+    // check response stastus
+    if (! ble.waitForOK() ) {
+      Serial.println(F("Failed to send?"));
     }
-    lastButtonState = buttonState;
-
-  // Display prompt
-  /*Serial.println(F("keyboard > "));*/
-
-  // Check for user input and echo it back if anything was found
-  char keys[BUFSIZE+1];
-  getUserInput(keys, BUFSIZE);
-
-  Serial.print("\nSending ");
-  Serial.println(keys);
-
-  ble.print("AT+BleKeyboard=");
-  ble.println(keys);
-
-  if( ble.waitForOK() )
-  {
-    Serial.println( F("OK!") );
-  }else
-  {
-    Serial.println( F("FAILED!") );
   }
+
+  // Check for incoming characters from Bluefruit
+  ble.println("AT+BLEUARTRX");
+  ble.readline();
+  if (strcmp(ble.buffer, "OK") == 0) {
+    // no data
+    return;
+  }
+  // Some data was found, its in the buffer
+  Serial.print(F("[Recv] ")); Serial.println(ble.buffer);
+  ble.waitForOK();
 }
 
 /**************************************************************************/
@@ -222,18 +205,23 @@ void loop(void)
     @brief  Checks for user input (via the Serial Monitor)
 */
 /**************************************************************************/
-void getUserInput(char buffer[], uint8_t maxSize)
+bool getUserInput(char buffer[], uint8_t maxSize)
 {
+  // timeout in 100 milliseconds
+  TimeoutTimer timeout(100);
+
   memset(buffer, 0, maxSize);
-  while( Serial.available() == 0 ) {
-    delay(1);
-  }
+  while( (!Serial.available()) && !timeout.expired() ) { delay(1); }
 
+  if ( timeout.expired() ) return false;
+
+  delay(2);
   uint8_t count=0;
-
   do
   {
     count += Serial.readBytes(buffer+count, maxSize);
     delay(2);
-  } while( (count < maxSize) && !(Serial.available() == 0) );
+  } while( (count < maxSize) && (Serial.available()) );
+
+  return true;
 }
