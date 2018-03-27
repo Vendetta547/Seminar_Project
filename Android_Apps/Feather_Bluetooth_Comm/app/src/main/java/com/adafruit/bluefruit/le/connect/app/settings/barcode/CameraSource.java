@@ -249,68 +249,6 @@ public class CameraSource {
         }
     }
 
-    //==============================================================================================
-    // Bridge Functionality for the Camera1 API
-    //==============================================================================================
-
-    /**
-     * Callback interface used to signal the moment of actual image capture.
-     */
-    public interface ShutterCallback {
-        /**
-         * Called as near as possible to the moment when a photo is captured from the sensor. This
-         * is a good opportunity to play a shutter sound or give other feedback of camera operation.
-         * This may be some time after the photo was triggered, but some time before the actual data
-         * is available.
-         */
-        void onShutter();
-    }
-
-    /**
-     * Callback interface used to supply image data from a photo capture.
-     */
-    public interface PictureCallback {
-        /**
-         * Called when image data is available after a picture is taken.  The format of the data
-         * is a jpeg binary.
-         */
-        void onPictureTaken(byte[] data);
-    }
-
-    /**
-     * Callback interface used to notify on completion of camera auto focus.
-     */
-    public interface AutoFocusCallback {
-        /**
-         * Called when the camera auto focus completes.  If the camera
-         * does not support auto-focus and autoFocus is called,
-         * onAutoFocus will be called immediately with a fake value of
-         * <code>success</code> set to <code>true</code>.
-         * <p/>
-         * The auto-focus routine does not lock auto-exposure and auto-white
-         * balance after it completes.
-         *
-         * @param success true if focus was successful, false if otherwise
-         */
-        void onAutoFocus(boolean success);
-    }
-
-    /**
-     * Callback interface used to notify on auto focus start and stop.
-     * <p/>
-     * <p>This is only supported in continuous autofocus modes -- {@link
-     * Camera.Parameters#FOCUS_MODE_CONTINUOUS_VIDEO} and {@link
-     * Camera.Parameters#FOCUS_MODE_CONTINUOUS_PICTURE}. Applications can show
-     * autofocus animation based on this.</p>
-     */
-    public interface AutoFocusMoveCallback {
-        /**
-         * Called when the camera auto focus starts or stops.
-         *
-         * @param start true if focus starts to move, false if focus stops to move
-         */
-        void onAutoFocusMoving(boolean start);
-    }
 
     //==============================================================================================
     // Public

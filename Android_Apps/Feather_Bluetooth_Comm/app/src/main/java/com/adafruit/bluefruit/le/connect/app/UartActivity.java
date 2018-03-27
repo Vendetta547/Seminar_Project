@@ -583,18 +583,7 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     }
     // endregion
 
-    // region BleManagerListener
-    /*
-    @Override
-    public void onConnected() {
 
-    }
-
-    @Override
-    public void onConnecting() {
-
-    }
-*/
     @Override
     public void onDisconnected() {
         super.onDisconnected();
@@ -648,19 +637,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
 
-
-/*
-    @Override
-    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
-
-    }
-
-    @Override
-    public void onReadRemoteRssi(int rssi) {
-
-    }
-    */
-    // endregion
 
     private void addTextToSpanBuffer(SpannableStringBuilder spanBuffer, String text, int color) {
 
@@ -796,9 +772,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     @Override
     public void onMqttMessageArrived(String topic, MqttMessage mqttMessage) {
         final String message = new String(mqttMessage.getPayload());
-
-        //Log.d(TAG, "Mqtt messageArrived from topic: " +topic+ " message: "+message);
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

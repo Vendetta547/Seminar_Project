@@ -181,13 +181,6 @@ public class CustomKeyboard {
 
                 }
 
-                /*
-                int inType = editText.getInputType();       // Backup the input type
-                editText.setInputType(InputType.TYPE_NULL); // Disable standard keyboard
-                editText.onTouchEvent(event);               // Call native handler
-                editText.setInputType(inType);              // Restore input type
-*/
-
                 return true;
             }
         });

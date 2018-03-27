@@ -236,10 +236,6 @@ public class PadActivity extends UartInterfaceActivity {
         }
     }
 
-    /*
-    public void onClickExit(View view) {
-        finish();
-    }*/
 
     private int mDataBufferLastSize = 0;
     private boolean mLastPacketEndsWithNewLine = false;
