@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\MyFirstApp.iml" filepath="C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\MyFirstApp.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\app\app.iml" filepath="C:\Users\Dylan\Documents\Senior_Seminar_Project\Seminar_Project\Android_Apps\Spotify_Control_Example\app\app.iml" />
     </modules>
   </component>
 </project>
