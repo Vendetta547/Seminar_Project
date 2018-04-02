@@ -22,13 +22,6 @@ class BleGattExecutor extends BluetoothGattCallback {
     private static String CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
     interface ServiceAction {
-        ServiceAction NULL = new ServiceAction() {
-            @Override
-            public boolean execute(BluetoothGatt bluetoothGatt) {
-                // it is null action. do nothing.
-                return true;
-            }
-        };
 
         /**
          * Executes action.

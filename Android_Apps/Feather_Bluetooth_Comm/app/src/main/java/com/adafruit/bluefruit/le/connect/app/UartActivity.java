@@ -6,11 +6,13 @@ import android.app.FragmentManager;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Spannable;
@@ -326,46 +328,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
 
-    public void onClickCopy(View view) {
-        String text = mBufferTextView.getText().toString(); // mShowDataInHexFormat ? mHexSpanBuffer.toString() : mAsciiSpanBuffer.toString();
-        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-        if (clipboard != null) {
-            ClipData clip = ClipData.newPlainText("UART", text);
-            clipboard.setPrimaryClip(clip);
-        }
-    }
-
-    public void onClickClear(View view) {
-        mTextSpanBuffer.clear();
-        mDataBufferLastSize = 0;
-        mBufferListAdapter.clear();
-        mBufferTextView.setText("");
-
-        mDataBuffer.clear();
-        mSentBytes = 0;
-        mReceivedBytes = 0;
-        updateUI();
-    }
-
-    public void onClickShare(View view) {
-        String textToSend = mBufferTextView.getText().toString(); // (mShowDataInHexFormat ? mHexSpanBuffer : mAsciiSpanBuffer).toString();
-
-        if (textToSend.length() > 0) {
-
-            Intent sendIntent = new Intent();
-            sendIntent.setAction(Intent.ACTION_SEND);
-            sendIntent.putExtra(Intent.EXTRA_TEXT, textToSend);
-            sendIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.uart_share_subject));     // subject will be used if sent to an email app
-            sendIntent.setType("text/*");       // Note: don't use text/plain because dropbox will not appear as destination
-            // startActivity(sendIntent);
-            startActivity(Intent.createChooser(sendIntent, getResources().getText(R.string.uart_sharechooser_title)));      // Always show the app-chooser
-        } else {
-            new AlertDialog.Builder(this)
-                    .setMessage(getString(R.string.uart_share_empty))
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
-        }
-    }
 
     private void setDisplayFormatToTimestamp(boolean enabled) {
         mIsTimestampDisplayMode = enabled;
@@ -583,18 +545,7 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     }
     // endregion
 
-    // region BleManagerListener
-    /*
-    @Override
-    public void onConnected() {
 
-    }
-
-    @Override
-    public void onConnecting() {
-
-    }
-*/
     @Override
     public void onDisconnected() {
         super.onDisconnected();
@@ -619,6 +570,16 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
                 final UartDataChunk dataChunk = new UartDataChunk(System.currentTimeMillis(), UartDataChunk.TRANSFERMODE_RX, bytes);
                 mDataBuffer.add(dataChunk);
+
+                String command = new String(bytes);
+                Log.d(TAG, "Command is "+command);
+                if (command.equals("play/pause")) {
+                    togglePlayPause();
+                } else if (command.equals("next")) {
+                    nextSong();
+                } else if (command.equals("previous")) {
+                    previousSong();
+                }
 
                 runOnUiThread(new Runnable() {
                     @Override
@@ -648,19 +609,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
 
-
-/*
-    @Override
-    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
-
-    }
-
-    @Override
-    public void onReadRemoteRssi(int rssi) {
-
-    }
-    */
-    // endregion
 
     private void addTextToSpanBuffer(SpannableStringBuilder spanBuffer, String text, int color) {
 
@@ -796,9 +744,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     @Override
     public void onMqttMessageArrived(String topic, MqttMessage mqttMessage) {
         final String message = new String(mqttMessage.getPayload());
-
-        //Log.d(TAG, "Mqtt messageArrived from topic: " +topic+ " message: "+message);
-
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -843,4 +788,46 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
     // endregion
+
+    // spotify handling stuff
+
+    public void nextSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.NEXT");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void previousSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.PREVIOUS");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void playSong() {
+        Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        i.setComponent(new ComponentName("com.spotify.music", "com.spotify.music.internal.receiver.MediaButtonReceiver"));
+        i.putExtra(Intent.EXTRA_KEY_EVENT,new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY));
+        sendOrderedBroadcast(i, null);
+
+        i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        i.setComponent(new ComponentName("com.spotify.music", "com.spotify.music.internal.receiver.MediaButtonReceiver"));
+        i.putExtra(Intent.EXTRA_KEY_EVENT,new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY));
+        sendOrderedBroadcast(i, null);
+    }
+
+    public void pauseSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.PLAY");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void togglePlayPause() {
+        AudioManager manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        if(manager.isMusicActive())
+        {
+            pauseSong();
+        } else {
+            playSong();
+        }
+    }
 }

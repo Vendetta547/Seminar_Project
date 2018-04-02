@@ -96,15 +96,13 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
         mCustomFirmwareButton = (Button) findViewById(R.id.customFirmwareButton);
         mFirmwareReleasesListView = (ExpandableHeightListView) findViewById(R.id.firmwareReleasesListView);
         mFirmwareReleasesListView.setExpanded(true);
-        //       mFirmwareReleasesListAdapter = new ReleasesListAdapter(ConnectedSettingsActivity.this, mBoardRelease == null ? null : mBoardRelease.firmwareReleases, mShowBetaVersions);           // mBoardRelease is still null here (except if we are restoring the activity because onConfigChanges)
-        //       mFirmwareReleasesListView.setAdapter(mFirmwareReleasesListAdapter);
+
 
         mBootloaderReleasesView = findViewById(R.id.bootloaderReleasesView);
         mCustomBootloaderButton = (Button) findViewById(R.id.customBootloaderButton);
         mBootloaderReleasesListView = (ExpandableHeightListView) findViewById(R.id.bootloaderReleasesListView);
         mBootloaderReleasesListView.setExpanded(true);
-//        mBootloaderReleasesListAdapter = new ReleasesListAdapter(ConnectedSettingsActivity.this, mBoardRelease == null ? null : mBoardRelease.bootloaderReleases, mShowBetaVersions);      // mBoardRelease is still null here (except if we are restoring the activity because onConfigChanges)
-//        mBootloaderReleasesListView.setAdapter(mBootloaderReleasesListAdapter);
+
 
         updateReleaseAdapters();
 
@@ -133,14 +131,6 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
         super.onDestroy();
     }
 
-    /*
-        @Override
-        public boolean onCreateOptionsMenu(Menu menu) {
-            // Inflate the menu; this adds items to the action bar if it is present.
-            getMenuInflater().inflate(R.menu.menu_connected_settings, menu);
-            return true;
-        }
-    */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -148,12 +138,6 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        /*
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
-        */
         if (id == android.R.id.home) {
             finish();
             return true;
@@ -191,8 +175,6 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         boolean showBootloader = sharedPreferences.getBoolean("pref_showbootloaders", false);
         mBootloaderReleasesView.setVisibility(!showWaitView && showBootloader ? View.VISIBLE : View.GONE);
-
-        //mFirmwareReleasesListView.setVisibility(!showWaitView ? View.VISIBLE : View.GONE);
     }
 
 
@@ -345,9 +327,7 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
             rowView.setTag(release);
             String versionString = String.format(getString(release.isBeta ? R.string.connectedsettings_betaversionformat : R.string.connectedsettings_versionformat), release.version);
             titleTextView.setText(versionString);
-//            String subtitleText = String.format(getString(release.isBeta?R.string.connectedsettings_betasubtitleformat:R.string.connectedsettings_subtitleformat), release.description);
             subtitleTextView.setText(release.description);
-
             return rowView;
         }
     }
@@ -450,11 +430,6 @@ public class ConnectedSettingsActivity extends AppCompatActivity implements Firm
     private void openFileChooser(int operationId) {
 
         final Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        /*
-        final int fileType = DfuService.TYPE_APPLICATION;
-        String types = fileType == DfuService.TYPE_AUTO ? DfuService.MIME_TYPE_ZIP : DfuService.MIME_TYPE_OCTET_STREAM;
-        types += ";application/mac-binhex";    // hex is recognized as this mimetype (for dropbox)
-        */
         intent.setType("*/*");      // Everything to avoid problems with GoogleDrive
 
         intent.addCategory(Intent.CATEGORY_OPENABLE);

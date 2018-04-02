@@ -186,17 +186,6 @@ public class BleUtils {
         } else return null;
     }
 
-    public static String byteToHex(byte value) {
-        if (value > 0x0f) {
-            char[] hexChars = new char[2];
-            hexChars[0] = hexArray[value >>> 4];
-            hexChars[1] = hexArray[value & 0x0F];
-            return new String(hexChars);
-        } else {
-            return "" + hexArray[value & 0x0F];
-        }
-    }
-
     public static String bytesToHex2(byte[] bytes) {
         StringBuilder stringBuffer = new StringBuilder();
         for (byte aByte : bytes) {

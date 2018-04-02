@@ -1,8 +1,6 @@
 package com.adafruit.bluefruit.le.connect.app;
 
 import android.Manifest;
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -27,34 +25,24 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.PopupMenu;
-import android.text.Editable;
 import android.text.Html;
 import android.text.Spanned;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
 import android.widget.ExpandableListView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ScrollView;
-import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adafruit.bluefruit.le.connect.R;
-import com.adafruit.bluefruit.le.connect.app.neopixel.NeopixelActivity;
 import com.adafruit.bluefruit.le.connect.app.settings.SettingsActivity;
 import com.adafruit.bluefruit.le.connect.app.update.FirmwareUpdater;
 import com.adafruit.bluefruit.le.connect.app.update.ReleasesParser;
@@ -86,17 +74,9 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
 
-    private final static String kPreferences = "MainActivity_prefs";
-    private final static String kPreferences_filtersPanelOpen = "filtersPanelOpen";
-
     // Components
     private final static int kComponentsNameIds[] = {
-            R.string.scan_connectservice_info,
             R.string.scan_connectservice_uart,
-            R.string.scan_connectservice_pinio,
-            R.string.scan_connectservice_controller,
-            R.string.scan_connectservice_beacon,
-            R.string.scan_connectservice_neopixel,
     };
 
     // Activity request codes (used for onActivityResult)
@@ -114,15 +94,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private AlertDialog mConnectingDialog;
-    private View mFiltersPanelView;
-    private ImageView mFiltersExpandImageView;
-    private ImageButton mFiltersClearButton;
-    private TextView mFiltersTitleTextView;
-    private EditText mFiltersNameEditText;
-    private SeekBar mFiltersRssiSeekBar;
-    private TextView mFiltersRssiValueTextView;
-    private CheckBox mFiltersUnnamedCheckBox;
-    private CheckBox mFiltersUartCheckBox;
 
     // Data
     private BleManager mBleManager;
@@ -183,73 +154,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             }
         });
 
-
-        mFiltersPanelView = findViewById(R.id.filtersExpansionView);
-        mFiltersExpandImageView = (ImageView) findViewById(R.id.filtersExpandImageView);
-        mFiltersClearButton = (ImageButton) findViewById(R.id.filtersClearButton);
-        mFiltersTitleTextView = (TextView) findViewById(R.id.filtersTitleTextView);
-        mFiltersNameEditText = (EditText) findViewById(R.id.filtersNameEditText);
-        mFiltersNameEditText.addTextChangedListener(new TextWatcher() {
-
-            public void afterTextChanged(Editable s) {
-                String text = s.toString();
-                mPeripheralList.setFilterName(text);
-                updateFilters();
-            }
-
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
-
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
-        });
-        mFiltersRssiSeekBar = (SeekBar) findViewById(R.id.filtersRssiSeekBar);
-        mFiltersRssiSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                int rssiValue = -seekBar.getProgress();
-                mPeripheralList.setFilterRssiValue(rssiValue);
-                updateRssiValue();
-                updateFilters();
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        mFiltersRssiValueTextView = (TextView) findViewById(R.id.filtersRssiValueTextView);
-        mFiltersUnnamedCheckBox = (CheckBox) findViewById(R.id.filtersUnnamedCheckBox);
-        mFiltersUnnamedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPeripheralList.setFilterUnnamedEnabled(isChecked);
-                updateFilters();
-            }
-        });
-        mFiltersUartCheckBox = (CheckBox) findViewById(R.id.filtersUartCheckBox);
-        mFiltersUartCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                mPeripheralList.setFilterOnlyUartEnabled(isChecked);
-                updateFilters();
-            }
-        });
-
-        // Filters
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        boolean filtersIsPanelOpen = preferences.getBoolean(kPreferences_filtersPanelOpen, false);
-        openFiltersPanel(filtersIsPanelOpen, false);
-        updateFiltersTitle();
-        mFiltersNameEditText.setText(mPeripheralList.getFilterName());
-        setRssiSliderValue(mPeripheralList.getFilterRssiValue());
-        mFiltersUnnamedCheckBox.setChecked(mPeripheralList.isFilterUnnamedEnabled());
-        mFiltersUartCheckBox.setChecked(mPeripheralList.isFilterOnlyUartEnabled());
 
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
@@ -466,138 +370,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     // endregion
 
 
-    // region Filters
-    private void openFiltersPanel(final boolean isOpen, boolean animated) {
-        SharedPreferences.Editor preferencesEditor = getSharedPreferences(kPreferences, MODE_PRIVATE).edit();
-        preferencesEditor.putBoolean(kPreferences_filtersPanelOpen, isOpen);
-        preferencesEditor.apply();
-
-        mFiltersExpandImageView.setImageResource(isOpen ? R.drawable.ic_expand_less_black_24dp : R.drawable.ic_expand_more_black_24dp);
-
-        /*
-        float paddingTop = MetricsUtils.convertDpToPixel(this, (float) (isOpen ? 200 : 44));
-        mScannedDevicesListView.setPadding(0, (int) paddingTop, 0, 0);
-
-        mFiltersPanelView.setVisibility(View.VISIBLE);
-        HeightAnimation heightAnim = new HeightAnimation(mFiltersPanelView, isOpen?0:200, isOpen?200:0);
-        heightAnim.setDuration(300);
-        mFiltersPanelView.startAnimation(heightAnim);
-*/
-
-        mFiltersPanelView.setVisibility(isOpen ? View.VISIBLE : View.GONE);
-
-        mFiltersPanelView.animate()
-                .alpha(isOpen ? 1.0f : 0)
-                .setDuration(300)
-                .setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        super.onAnimationEnd(animation);
-                        mFiltersPanelView.setVisibility(isOpen ? View.VISIBLE : View.GONE);
-                    }
-                });
-
-    }
-/*
-    public class HeightAnimation extends Animation {
-        protected final int originalHeight;
-        protected final View view;
-        protected float perValue;
-
-        public HeightAnimation(View view, int fromHeight, int toHeight) {
-            this.view = view;
-            this.originalHeight = fromHeight;
-            this.perValue = (toHeight - fromHeight);
-        }
-
-        @Override
-        protected void applyTransformation(float interpolatedTime, Transformation t) {
-            view.getLayoutParams().height = (int) (originalHeight + perValue * interpolatedTime);
-            view.requestLayout();
-        }
-
-        @Override
-        public boolean willChangeBounds() {
-            return true;
-        }
-    }*/
-
-    public void onClickExpandFilters(View view) {
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        boolean filtersIsPanelOpen = preferences.getBoolean(kPreferences_filtersPanelOpen, false);
-
-        openFiltersPanel(!filtersIsPanelOpen, true);
-    }
-
-    public void onClickRemoveFilters(View view) {
-        mPeripheralList.setDefaultFilters();
-        mFiltersNameEditText.setText(mPeripheralList.getFilterName());
-        setRssiSliderValue(mPeripheralList.getFilterRssiValue());
-        mFiltersUnnamedCheckBox.setChecked(mPeripheralList.isFilterUnnamedEnabled());
-        mFiltersUartCheckBox.setChecked(mPeripheralList.isFilterOnlyUartEnabled());
-        updateFilters();
-    }
-
-    public void onClickFilterNameSettings(View view) {
-        PopupMenu popup = new PopupMenu(this, view);
-        popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem item) {
-                boolean processed = true;
-                switch (item.getItemId()) {
-                    case R.id.scanfilter_name_contains:
-                        mPeripheralList.setFilterNameExact(false);
-                        break;
-                    case R.id.scanfilter_name_exact:
-                        mPeripheralList.setFilterNameExact(true);
-                        break;
-                    case R.id.scanfilter_name_sensitive:
-                        mPeripheralList.setFilterNameCaseInsensitive(false);
-                        break;
-                    case R.id.scanfilter_name_insensitive:
-                        mPeripheralList.setFilterNameCaseInsensitive(true);
-                        break;
-                    default:
-                        processed = false;
-                        break;
-                }
-                updateFilters();
-                return processed;
-            }
-        });
-        MenuInflater inflater = popup.getMenuInflater();
-        Menu menu = popup.getMenu();
-        inflater.inflate(R.menu.menu_scan_filters_name, menu);
-        final boolean isFilterNameExact = mPeripheralList.isFilterNameExact();
-        menu.findItem(isFilterNameExact ? R.id.scanfilter_name_exact : R.id.scanfilter_name_contains).setChecked(true);
-        final boolean isFilterNameCaseInsensitive = mPeripheralList.isFilterNameCaseInsensitive();
-        menu.findItem(isFilterNameCaseInsensitive ? R.id.scanfilter_name_insensitive : R.id.scanfilter_name_sensitive).setChecked(true);
-        popup.show();
-    }
-
-
-    private void updateFiltersTitle() {
-        final String filtersTitle = mPeripheralList.filtersDescription();
-        mFiltersTitleTextView.setText(filtersTitle != null ? String.format(Locale.ENGLISH, getString(R.string.scan_filters_title_filter_format), filtersTitle) : getString(R.string.scan_filters_title_nofilter));
-        mFiltersClearButton.setVisibility(mPeripheralList.isAnyFilterEnabled() ? View.VISIBLE : View.GONE);
-    }
-
-    private void updateFilters() {
-        updateFiltersTitle();
-        mScannedDevicesAdapter.notifyDataSetChanged();
-    }
-
-    private void setRssiSliderValue(int value) {
-        mFiltersRssiSeekBar.setProgress(-value);
-        updateRssiValue();
-    }
-
-    private void updateRssiValue() {
-        final int value = -mFiltersRssiSeekBar.getProgress();
-        mFiltersRssiValueTextView.setText(String.format(Locale.ENGLISH, getString(R.string.scan_filters_rssi_value_format), value));
-    }
-
-    // endregion
 
     private void resumeScanning() {
         if (mIsScanPaused) {
@@ -618,28 +390,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 .setItems(items, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         switch (kComponentsNameIds[which]) {
-                            case R.string.scan_connectservice_info: {          // Info
-                                mComponentToStartWhenConnected = InfoActivity.class;
-                                break;
-                            }
                             case R.string.scan_connectservice_uart: {           // Uart
                                 mComponentToStartWhenConnected = UartActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_pinio: {        // PinIO
-                                mComponentToStartWhenConnected = PinIOActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_controller: {    // Controller
-                                mComponentToStartWhenConnected = ControllerActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_beacon: {        // Beacon
-                                mComponentToStartWhenConnected = BeaconActivity.class;
-                                break;
-                            }
-                            case R.string.scan_connectservice_neopixel: {       // Neopixel
-                                mComponentToStartWhenConnected = NeopixelActivity.class;
                                 break;
                             }
                         }
@@ -837,10 +589,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
             if (mSelectedDeviceData.type == BluetoothDeviceData.kType_Uart) {      // if is uart, show all the available activities
                 showChooseDeviceServiceDialog(mSelectedDeviceData);
-            } else {                          // if no uart, then go directly to info
-                Log.d(TAG, "No UART service found. Go to InfoActivity");
-                mComponentToStartWhenConnected = InfoActivity.class;
-                connect(device);
             }
         } else {
             Log.w(TAG, "onClickDeviceConnect index does not exist: " + scannedDeviceIndex);
@@ -1109,9 +857,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         if (mComponentToStartWhenConnected != null) {
             Log.d(TAG, "Start component:" + mComponentToStartWhenConnected);
             Intent intent = new Intent(MainActivity.this, mComponentToStartWhenConnected);
-            if (mComponentToStartWhenConnected == BeaconActivity.class && mSelectedDeviceData != null) {
-                intent.putExtra("rssi", mSelectedDeviceData.rssi);
-            }
             startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
         }
     }
@@ -1371,8 +1116,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         private ArrayList<BluetoothDeviceData> mCachedFilteredPeripheralList;
         private boolean mIsFilterDirty;
 
-        private SharedPreferences.Editor preferencesEditor = getSharedPreferences(kPreferences, MODE_PRIVATE).edit();
-
         PeripheralList() {
             mIsFilterDirty = true;
             mCachedFilteredPeripheralList = new ArrayList<>();
@@ -1386,92 +1129,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mIsOnlyUartEnabled = preferences.getBoolean(kPreferences_filtersUartEnabled, false);
         }
 
-        String getFilterName() {
-            return mFilterName;
-        }
-
-        void setFilterName(String name) {
-            mFilterName = name;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putString(kPreferences_filtersName, name);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterNameExact() {
-            return mIsFilterNameExact;
-        }
-
-        void setFilterNameExact(boolean exact) {
-            mIsFilterNameExact = exact;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersIsNameExact, exact);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterNameCaseInsensitive() {
-            return mIsFilterNameCaseInsensitive;
-        }
-
-        void setFilterNameCaseInsensitive(boolean caseInsensitive) {
-            mIsFilterNameCaseInsensitive = caseInsensitive;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersIsNameCaseInsensitive, caseInsensitive);
-            preferencesEditor.apply();
-        }
-
-        int getFilterRssiValue() {
-            return mRssiFilterValue;
-        }
-
-        void setFilterRssiValue(int value) {
-            mRssiFilterValue = value;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putInt(kPreferences_filtersRssi, value);
-            preferencesEditor.apply();
-        }
-
-        boolean isFilterUnnamedEnabled() {
-            return mIsUnnamedEnabled;
-        }
-
-        void setFilterUnnamedEnabled(boolean enabled) {
-            mIsUnnamedEnabled = enabled;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersUnnamedEnabled, enabled);
-            preferencesEditor.apply();
-        }
-
-
-        boolean isFilterOnlyUartEnabled() {
-            return mIsOnlyUartEnabled;
-        }
-
-        void setFilterOnlyUartEnabled(boolean enabled) {
-            mIsOnlyUartEnabled = enabled;
-            mIsFilterDirty = true;
-
-            preferencesEditor.putBoolean(kPreferences_filtersUartEnabled, enabled);
-            preferencesEditor.apply();
-        }
-
-
-        void setDefaultFilters() {
-            mFilterName = null;
-            mIsFilterNameExact = false;
-            mIsFilterNameCaseInsensitive = true;
-            mRssiFilterValue = kMaxRssiValue;
-            mIsUnnamedEnabled = true;
-            mIsOnlyUartEnabled = false;
-        }
-
-        boolean isAnyFilterEnabled() {
-            return (mFilterName != null && !mFilterName.isEmpty()) || mRssiFilterValue > kMaxRssiValue || mIsOnlyUartEnabled || !mIsUnnamedEnabled;
-        }
 
         ArrayList<BluetoothDeviceData> filteredPeripherals(boolean forceUpdate) {
             if (mIsFilterDirty || forceUpdate) {
@@ -1543,43 +1200,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             }
 
             return peripherals;
-        }
-
-        String filtersDescription() {
-            String filtersTitle = null;
-
-            if (mFilterName != null && !mFilterName.isEmpty()) {
-                filtersTitle = mFilterName;
-            }
-
-            if (mRssiFilterValue > kMaxRssiValue) {
-                String rssiString = String.format(Locale.ENGLISH, getString(R.string.scan_filters_name_rssi_format), mRssiFilterValue);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + rssiString;
-                } else {
-                    filtersTitle = rssiString;
-                }
-            }
-
-            if (!mIsUnnamedEnabled) {
-                String namedString = getString(R.string.scan_filters_name_named);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + namedString;
-                } else {
-                    filtersTitle = namedString;
-                }
-            }
-
-            if (mIsOnlyUartEnabled) {
-                String uartString = getString(R.string.scan_filters_name_uart);
-                if (filtersTitle != null && !filtersTitle.isEmpty()) {
-                    filtersTitle = filtersTitle + ", " + uartString;
-                } else {
-                    filtersTitle = uartString;
-                }
-            }
-
-            return filtersTitle;
         }
     }
 
@@ -1655,8 +1275,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             String address = deviceData.device.getAddress();
             result.append(getString(R.string.scan_device_address) + ": <b>" + (address == null ? "" : address) + "</b><br>");
 
-            String uri = UriBeaconUtils.getUriFromAdvertisingPacket(deviceData.scanRecord) + "</b><br>";
-            result.append(getString(R.string.scan_device_uribeacon_uri)).append(": <b>").append(uri);
+           // String uri = UriBeaconUtils.getUriFromAdvertisingPacket(deviceData.scanRecord) + "</b><br>";
+           // result.append(getString(R.string.scan_device_uribeacon_uri)).append(": <b>").append(uri);
 
             result.append(getString(R.string.scan_device_txpower)).append(": <b>").append(deviceData.txPower).append("</b>");
 
@@ -1781,25 +1401,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 }
             });
 
-            /*
-            holder.connectButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onClickDeviceConnect(groupPosition);
-                }
-            });
 
-            convertView.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN ) {
-                        onClickScannedDevice(v);
-                        return true;
-                    }
-                    return false;
-                }
-            });
-            */
 
             holder.connectButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -1908,7 +1510,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         private FirmwareUpdater mFirmwareUpdater;
         private String mLatestCheckedDeviceAddress;
         private BluetoothDeviceData mSelectedDeviceData;
-        //private PeripheralList mPeripheralList;
 
         @Override
         public void onCreate(Bundle savedInstanceState) {
@@ -1929,7 +1530,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             fm.beginTransaction().add(mRetainedDataFragment, TAG).commitAllowingStateLoss();        // http://stackoverflow.com/questions/7575921/illegalstateexception-can-not-perform-this-action-after-onsaveinstancestate-h
 
             mScannedDevices = new ArrayList<>();
-            // mPeripheralList = new PeripheralList();
 
         } else {
             // Restore status
@@ -1939,7 +1539,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mFirmwareUpdater = mRetainedDataFragment.mFirmwareUpdater;
             mLatestCheckedDeviceAddress = mRetainedDataFragment.mLatestCheckedDeviceAddress;
             mSelectedDeviceData = mRetainedDataFragment.mSelectedDeviceData;
-            //mPeripheralList = mRetainedDataFragment.mPeripheralList;
 
             if (mFirmwareUpdater != null) {
                 mFirmwareUpdater.changedParentActivity(this);       // set the new activity
@@ -1954,7 +1553,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         mRetainedDataFragment.mFirmwareUpdater = mFirmwareUpdater;
         mRetainedDataFragment.mLatestCheckedDeviceAddress = mLatestCheckedDeviceAddress;
         mRetainedDataFragment.mSelectedDeviceData = mSelectedDeviceData;
-        //mRetainedDataFragment.mPeripheralList = mPeripheralList;
     }
     // endregion
 }
