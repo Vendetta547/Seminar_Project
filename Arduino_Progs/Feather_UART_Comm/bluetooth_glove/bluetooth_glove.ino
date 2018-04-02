@@ -13,6 +13,7 @@
 #define FACTORYRESET_ENABLE         1
 #define MINIMUM_FIRMWARE_VERSION    "0.6.6"
 #define MODE_LED_BEHAVIOUR          "MODE"
+
 /*=========================================================================*/
 
 // Create the bluefruit object, either software serial...uncomment these lines
@@ -48,6 +49,7 @@ const int play_button3 = 11;
 void setup(void)
 {
   pinMode(play_button, INPUT);
+
   while (!Serial);  // required for Flora & Micro
   delay(500);
 
@@ -166,7 +168,6 @@ void loop(void)
     }
     lastButtonState3 = buttonState3;
     
-  
   // Check for user input
   char inputs[BUFSIZE+1];
 
