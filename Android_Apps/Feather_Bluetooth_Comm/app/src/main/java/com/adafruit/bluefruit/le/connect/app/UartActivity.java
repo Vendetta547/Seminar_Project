@@ -6,11 +6,13 @@ import android.app.FragmentManager;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.text.Spannable;
@@ -569,6 +571,16 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
                 final UartDataChunk dataChunk = new UartDataChunk(System.currentTimeMillis(), UartDataChunk.TRANSFERMODE_RX, bytes);
                 mDataBuffer.add(dataChunk);
 
+                String command = new String(bytes);
+                Log.d(TAG, "Command is "+command);
+                if (command.equals("play/pause")) {
+                    togglePlayPause();
+                } else if (command.equals("next")) {
+                    nextSong();
+                } else if (command.equals("previous")) {
+                    previousSong();
+                }
+
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -776,4 +788,46 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         }
     }
     // endregion
+
+    // spotify handling stuff
+
+    public void nextSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.NEXT");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void previousSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.PREVIOUS");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void playSong() {
+        Intent i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        i.setComponent(new ComponentName("com.spotify.music", "com.spotify.music.internal.receiver.MediaButtonReceiver"));
+        i.putExtra(Intent.EXTRA_KEY_EVENT,new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_MEDIA_PLAY));
+        sendOrderedBroadcast(i, null);
+
+        i = new Intent(Intent.ACTION_MEDIA_BUTTON);
+        i.setComponent(new ComponentName("com.spotify.music", "com.spotify.music.internal.receiver.MediaButtonReceiver"));
+        i.putExtra(Intent.EXTRA_KEY_EVENT,new KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_MEDIA_PLAY));
+        sendOrderedBroadcast(i, null);
+    }
+
+    public void pauseSong() {
+        Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.PLAY");
+        playSpotify.setPackage("com.spotify.music");
+        getApplicationContext().sendBroadcast(playSpotify);
+    }
+
+    public void togglePlayPause() {
+        AudioManager manager = (AudioManager)this.getSystemService(Context.AUDIO_SERVICE);
+        if(manager.isMusicActive())
+        {
+            pauseSong();
+        } else {
+            playSong();
+        }
+    }
 }
