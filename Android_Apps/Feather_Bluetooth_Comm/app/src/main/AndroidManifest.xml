@@ -83,10 +83,6 @@
 
         <service android:name=".app.update.DfuService" />
 
-        <activity
-            android:name=".app.settings.ConnectedSettingsActivity"
-            android:label="@string/title_activity_connected_settings" />
-
 
         <provider
             android:name=".utils.LegacyCompatFileProvider"
