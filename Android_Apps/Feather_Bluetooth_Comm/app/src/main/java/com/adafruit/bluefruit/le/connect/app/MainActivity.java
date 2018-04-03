@@ -10,7 +10,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.bluetooth.BluetoothGattService;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.DialogInterface;
@@ -58,7 +57,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -69,15 +67,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     // Constants
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static long kMinDelayToUpdateUI = 200;    // in milliseconds
-    private static final String kGenericAttributeService = "00001801-0000-1000-8000-00805F9B34FB";
-    private static final String kServiceChangedCharacteristic = "00002A05-0000-1000-8000-00805F9B34FB";
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
-
-    // Components
-    private final static int kComponentsNameIds[] = {
-            R.string.scan_connectservice_uart,
-    };
 
     // Activity request codes (used for onActivityResult)
     private static final int kActivityRequestCode_EnableBluetooth = 1;
@@ -378,34 +369,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
-    private void showChooseDeviceServiceDialog(final BluetoothDeviceData deviceData) {
-        // Prepare dialog
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        String title = String.format(getString(R.string.scan_connectto_dialog_title_format), deviceData.getNiceName());
-        String[] items = new String[kComponentsNameIds.length];
-        for (int i = 0; i < kComponentsNameIds.length; i++)
-            items[i] = getString(kComponentsNameIds[i]);
-
-        builder.setTitle(title)
-                .setItems(items, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        switch (kComponentsNameIds[which]) {
-                            case R.string.scan_connectservice_uart: {           // Uart
-                                mComponentToStartWhenConnected = UartActivity.class;
-                                break;
-                            }
-                        }
-
-                        if (mComponentToStartWhenConnected != null) {
-                            connect(deviceData.device);            // First connect to the device, and when connected go to selected activity
-                        }
-                    }
-                });
-
-        // Show dialog
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
 
     private boolean manageBluetoothAvailability() {
         boolean isEnabled = true;
@@ -474,6 +437,11 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         boolean isConnecting = mBleManager.connect(this, device.getAddress());
         if (isConnecting) {
             showConnectionStatus(true);
+            if (mComponentToStartWhenConnected != null) {
+                Log.d(TAG, "Start component:" + mComponentToStartWhenConnected);
+                Intent intent = new Intent(MainActivity.this, mComponentToStartWhenConnected);
+                startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
+            }
         }
     }
 
@@ -520,10 +488,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         showStatusDialog(enable, R.string.scan_connecting);
     }
 
-    private void showGettingUpdateInfoState() {
-        showConnectionStatus(false);
-        showStatusDialog(true, R.string.scan_gettingupdateinfo);
-    }
+
 
     private void showStatusDialog(boolean show, int stringId) {
         if (show) {
@@ -588,11 +553,13 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
 
             if (mSelectedDeviceData.type == BluetoothDeviceData.kType_Uart) {      // if is uart, show all the available activities
-                showChooseDeviceServiceDialog(mSelectedDeviceData);
+                //showChooseDeviceServiceDialog(mSelectedDeviceData);
             }
         } else {
             Log.w(TAG, "onClickDeviceConnect index does not exist: " + scannedDeviceIndex);
         }
+        mComponentToStartWhenConnected = UartActivity.class;
+        connect(mSelectedDeviceData.device);
     }
 
     public void onClickScan(View view) {
@@ -834,32 +801,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
     // endregion
 
-    private void launchComponentActivity() {
-        // Enable generic attribute service
-        final BluetoothGattService genericAttributeService = mBleManager.getGattService(kGenericAttributeService);
-        if (genericAttributeService != null) {
-            Log.d(TAG, "kGenericAttributeService found. Check if kServiceChangedCharacteristic exists");
-
-            final UUID characteristicUuid = UUID.fromString(kServiceChangedCharacteristic);
-            final BluetoothGattCharacteristic dataCharacteristic = genericAttributeService.getCharacteristic(characteristicUuid);
-            if (dataCharacteristic != null) {
-                Log.d(TAG, "kServiceChangedCharacteristic exists. Enable indication");
-                mBleManager.enableIndication(genericAttributeService, kServiceChangedCharacteristic, true);
-            } else {
-                Log.d(TAG, "Skip enable indications for kServiceChangedCharacteristic. Characteristic not found");
-            }
-        } else {
-            Log.d(TAG, "Skip enable indications for kServiceChangedCharacteristic. kGenericAttributeService not found");
-        }
-
-        // Launch activity
-        showConnectionStatus(false);
-        if (mComponentToStartWhenConnected != null) {
-            Log.d(TAG, "Start component:" + mComponentToStartWhenConnected);
-            Intent intent = new Intent(MainActivity.this, mComponentToStartWhenConnected);
-            startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
-        }
-    }
 
     // region BleManagerListener
     @Override
@@ -877,68 +818,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
     @Override
-    public void onServicesDiscovered() {
-        Log.d(TAG, "services discovered");
+    public void onServicesDiscovered() {}
 
-        // Check if there is a failed installation that was stored to retry
-        boolean isFailedInstallationDetected = FirmwareUpdater.isFailedInstallationRecoveryAvailable(this, mBleManager.getConnectedDeviceAddress());
-        if (isFailedInstallationDetected) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Log.d(TAG, "Failed installation detected");
-                    // Ask user if should update
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle(R.string.scan_failedupdatedetected_title)
-                            .setMessage(R.string.scan_failedupdatedetected_message)
-                            .setPositiveButton(R.string.scan_failedupdatedetected_ok, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    showConnectionStatus(false);        // hide current dialogs because software update will display a dialog
-                                    stopScanning();
-
-                                    mFirmwareUpdater.startFailedInstallationRecovery(MainActivity.this);
-                                }
-                            })
-                            .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    FirmwareUpdater.clearFailedInstallationRecoveryParams(MainActivity.this);
-                                    launchComponentActivity();
-                                }
-                            })
-                            .setCancelable(false)
-                            .show();
-                }
-            });
-        } else {
-            // Check if a firmware update is available
-            boolean isCheckingFirmware = false;
-            if (mFirmwareUpdater != null) {
-                // Don't bother the user waiting for checks if the latest connected device was this one too
-                String deviceAddress = mBleManager.getConnectedDeviceAddress();
-                if (!deviceAddress.equals(mLatestCheckedDeviceAddress)) {
-                    mLatestCheckedDeviceAddress = deviceAddress;
-
-                    // Check if should update device software
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            showGettingUpdateInfoState();
-                        }
-                    });
-                    mFirmwareUpdater.checkFirmwareUpdatesForTheCurrentConnectedDevice();        // continues asynchronously in onFirmwareUpdatesChecked
-                    isCheckingFirmware = true;
-                } else {
-                    Log.d(TAG, "Updates: Device already checked previously. Skipping...");
-                }
-            }
-
-            if (!isCheckingFirmware) {
-                onFirmwareUpdatesChecked(false, null, null, null);
-            }
-        }
-    }
 
     @Override
     public void onDataAvailable(BluetoothGattCharacteristic characteristic) {
@@ -957,95 +838,25 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     // region SoftwareUpdateManagerListener
     @Override
     public void onFirmwareUpdatesChecked(boolean isUpdateAvailable, final ReleasesParser.FirmwareInfo latestRelease, FirmwareUpdater.DeviceInfoData deviceInfoData, Map<String, ReleasesParser.BoardInfo> allReleases) {
-        mBleManager.setBleListener(this);           // Restore listener
-
-        if (isUpdateAvailable) {
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    // Ask user if should update
-                    String message = String.format(getString(R.string.scan_softwareupdate_messageformat), latestRelease.version);
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setTitle(R.string.scan_softwareupdate_title)
-                            .setMessage(message)
-                            .setPositiveButton(R.string.scan_softwareupdate_install, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    showConnectionStatus(false);        // hide current dialogs because software update will display a dialog
-                                    stopScanning();
-                                    //BluetoothDevice device = mBleManager.getConnectedDevice();
-                                    mFirmwareUpdater.downloadAndInstall(MainActivity.this, latestRelease);
-                                }
-                            })
-                            .setNeutralButton(R.string.scan_softwareupdate_notnow, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    launchComponentActivity();
-                                }
-                            })
-                            .setNegativeButton(R.string.scan_softwareupdate_dontask, new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog, int which) {
-                                    mFirmwareUpdater.ignoreVersion(latestRelease.version);
-                                    launchComponentActivity();
-                                }
-                            })
-                            .setCancelable(false)
-                            .show();
-                }
-            });
-        } else {
-            Log.d(TAG, "onFirmwareUpdatesChecked: No software update available");
-            launchComponentActivity();
-        }
     }
 
     @Override
     public void onUpdateCancelled() {
-        Log.d(TAG, "Software version installation cancelled");
 
-        mLatestCheckedDeviceAddress = null;
-
-        mScannedDevices.clear();
-        startScan(null);
     }
 
     @Override
     public void onUpdateCompleted() {
-        Log.d(TAG, "Software version installation completed successfully");
 
-        Toast.makeText(this, R.string.scan_softwareupdate_completed, Toast.LENGTH_LONG).show();
-
-        mScannedDevices.clear();
-        startScan(null);
     }
 
     @Override
     public void onUpdateFailed(boolean isDownloadError) {
-        Log.d(TAG, "Software version installation failed");
-        Toast.makeText(this, isDownloadError ? R.string.scan_softwareupdate_downloaderror : R.string.scan_softwareupdate_updateerror, Toast.LENGTH_LONG).show();
 
-        mLatestCheckedDeviceAddress = null;
-
-        mScannedDevices.clear();
-        startScan(null);
     }
 
     @Override
     public void onUpdateDeviceDisconnected() {
-
-        // Update UI
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                onDisconnected();
-
-                mLatestCheckedDeviceAddress = null;
-
-                mScannedDevices.clear();
-                startScan(null);
-            }
-        });
     }
 
     // endregion

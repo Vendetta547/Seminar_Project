@@ -29,11 +29,6 @@ public class UartInterfaceActivity extends AppCompatActivity implements BleManag
     private boolean isRxNotificationEnabled = false;
 
 
-    // region Send Data to UART
-    protected void sendData(String text) {
-        final byte[] value = text.getBytes(Charset.forName("UTF-8"));
-        sendData(value);
-    }
 
     protected void sendData(byte[] data) {
         if (mUartService != null) {
@@ -139,6 +134,4 @@ public class UartInterfaceActivity extends AppCompatActivity implements BleManag
     public void onReadRemoteRssi(int rssi) {
 
     }
-
-    // endregion
 }

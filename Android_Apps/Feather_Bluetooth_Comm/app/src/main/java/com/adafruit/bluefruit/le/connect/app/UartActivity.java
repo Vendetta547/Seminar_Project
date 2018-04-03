@@ -1,11 +1,8 @@
 package com.adafruit.bluefruit.le.connect.app;
 
-import android.app.AlertDialog;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -27,30 +24,22 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.adafruit.bluefruit.le.connect.R;
-import com.adafruit.bluefruit.le.connect.app.settings.ConnectedSettingsActivity;
-import com.adafruit.bluefruit.le.connect.app.settings.MqttUartSettingsActivity;
 import com.adafruit.bluefruit.le.connect.app.settings.PreferencesFragment;
 import com.adafruit.bluefruit.le.connect.ble.BleManager;
 import com.adafruit.bluefruit.le.connect.ble.BleUtils;
-import com.adafruit.bluefruit.le.connect.mqtt.MqttManager;
-import com.adafruit.bluefruit.le.connect.mqtt.MqttSettings;
 
-import org.eclipse.paho.client.mqttv3.MqttMessage;
 
-import java.io.UnsupportedEncodingException;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class UartActivity extends UartInterfaceActivity implements MqttManager.MqttManagerListener {
+public class UartActivity extends UartInterfaceActivity  {
     // Log
     private final static String TAG = UartActivity.class.getSimpleName();
 
@@ -79,9 +68,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     private EditText mBufferTextView;
     private ListView mBufferListView;
     private TimestampListAdapter mBufferListAdapter;
-    private EditText mSendEditText;
-    private MenuItem mMqttMenuItem;
-    private Handler mMqttMenuItemAnimationHandler;
     private TextView mSentBytesTextView;
     private TextView mReceivedBytesTextView;
 
@@ -113,7 +99,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
     private DataFragment mRetainedDataFragment;
 
-    private MqttManager mMqttManager;
 
     private int maxPacketsToPaintAsText;
 
@@ -144,26 +129,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
             mBufferTextView.setKeyListener(null);     // make it not editable
         }
 
-        mSendEditText = (EditText) findViewById(R.id.sendEditText);
-        mSendEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            @Override
-            public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    onClickSend(null);
-                    return true;
-                }
-
-                return false;
-            }
-        });
-        mSendEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            public void onFocusChange(View view, boolean hasFocus) {
-                if (!hasFocus) {
-                    // Dismiss keyboard when sendEditText loses focus
-                    dismissKeyboard(view);
-                }
-            }
-        });
 
         mSentBytesTextView = (TextView) findViewById(R.id.sentBytesTextView);
         mReceivedBytesTextView = (TextView) findViewById(R.id.receivedBytesTextView);
@@ -184,12 +149,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
         // Continue
         onServicesDiscovered();
-
-        // Mqtt init
-        mMqttManager = MqttManager.getInstance(this);
-        if (MqttSettings.getInstance(this).isConnected()) {
-            mMqttManager.connectFromSavedSettings(this);
-        }
     }
 
     @Override
@@ -198,9 +157,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
         // Setup listeners
         mBleManager.setBleListener(this);
-
-        mMqttManager.setListener(this);
-        updateMqttStatus();
 
         // Start UI refresh
         //Log.d(TAG, "add ui timer");
@@ -233,87 +189,12 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
     @Override
     public void onDestroy() {
-        // Disconnect mqtt
-        if (mMqttManager != null) {
-            mMqttManager.disconnect();
-        }
-
         // Retain data
         saveRetainedDataFragment();
 
         super.onDestroy();
     }
 
-    public void dismissKeyboard(View view) {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-    }
-
-    public void onClickSend(View view) {
-        String data = mSendEditText.getText().toString();
-        mSendEditText.setText("");       // Clear editText
-
-        uartSendData(data, false);
-    }
-
-    private void uartSendData(String data, boolean wasReceivedFromMqtt) {
-        // MQTT publish to TX
-        MqttSettings settings = MqttSettings.getInstance(UartActivity.this);
-        if (!wasReceivedFromMqtt) {
-            if (settings.isPublishEnabled()) {
-                String topic = settings.getPublishTopic(MqttUartSettingsActivity.kPublishFeed_TX);
-                final int qos = settings.getPublishQos(MqttUartSettingsActivity.kPublishFeed_TX);
-                mMqttManager.publish(topic, data, qos);
-            }
-        }
-
-        // Add eol
-        if (mIsEolEnabled) {
-            // Add newline character if checked
-            data += getEolCharacters();//"\n";
-        }
-
-        // Send to uart
-        if (!wasReceivedFromMqtt || settings.getSubscribeBehaviour() == MqttSettings.kSubscribeBehaviour_Transmit) {
-            sendData(data);
-            mSentBytes += data.length();
-        }
-
-        // Add to current buffer
-        byte[] bytes = new byte[0];
-        try {
-            bytes = data.getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        UartDataChunk dataChunk = new UartDataChunk(System.currentTimeMillis(), UartDataChunk.TRANSFERMODE_TX, bytes);
-        mDataBuffer.add(dataChunk);
-
-        final String formattedData = mShowDataInHexFormat ? BleUtils.bytesToHex2(bytes) : BleUtils.bytesToText(bytes, true);
-        if (mIsTimestampDisplayMode) {
-            final String currentDateTimeString = DateFormat.getTimeInstance().format(new Date(dataChunk.getTimestamp()));
-            mBufferListAdapter.add(new TimestampData("[" + currentDateTimeString + "] TX: " + formattedData, mTxColor));
-            mBufferListView.setSelection(mBufferListAdapter.getCount());
-        }
-
-        // Update UI
-        updateUI();
-    }
-
-    private String getEolCharacters() {
-        switch (mEolCharactersId) {
-            case 1:
-                return "\r";
-            case 2:
-                return "\n\r";
-            case 3:
-                return "\r\n";
-            default:
-                return "\n";
-        }
-    }
 
     private int getEolCharactersStringId() {
         switch (mEolCharactersId) {
@@ -341,10 +222,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_uart, menu);
 
-        // Mqtt
-        mMqttMenuItem = menu.findItem(R.id.action_mqttsettings);
-        mMqttMenuItemAnimationHandler = new Handler();
-        mMqttMenuItemAnimationRunnable.run();
 
         // DisplayMode
         MenuItem displayModeMenuItem = menu.findItem(R.id.action_displaymode);
@@ -405,127 +282,12 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
         return true;
     }
 
-    private Runnable mMqttMenuItemAnimationRunnable = new Runnable() {
-        @Override
-        public void run() {
-            updateMqttStatus();
-            mMqttMenuItemAnimationHandler.postDelayed(mMqttMenuItemAnimationRunnable, 500);
-        }
-    };
-    private int mMqttMenuItemAnimationFrame = 0;
-
-    private void updateMqttStatus() {
-        if (mMqttMenuItem == null)
-            return;      // Hack: Sometimes this could have not been initialized so we don't update icons
-
-        MqttManager mqttManager = MqttManager.getInstance(this);
-        MqttManager.MqqtConnectionStatus status = mqttManager.getClientStatus();
-
-        if (status == MqttManager.MqqtConnectionStatus.CONNECTING) {
-            final int kConnectingAnimationDrawableIds[] = {R.drawable.mqtt_connecting1, R.drawable.mqtt_connecting2, R.drawable.mqtt_connecting3};
-            mMqttMenuItem.setIcon(kConnectingAnimationDrawableIds[mMqttMenuItemAnimationFrame]);
-            mMqttMenuItemAnimationFrame = (mMqttMenuItemAnimationFrame + 1) % kConnectingAnimationDrawableIds.length;
-        } else if (status == MqttManager.MqqtConnectionStatus.CONNECTED) {
-            mMqttMenuItem.setIcon(R.drawable.mqtt_connected);
-            mMqttMenuItemAnimationHandler.removeCallbacks(mMqttMenuItemAnimationRunnable);
-        } else {
-            mMqttMenuItem.setIcon(R.drawable.mqtt_disconnected);
-            mMqttMenuItemAnimationHandler.removeCallbacks(mMqttMenuItemAnimationRunnable);
-        }
-    }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        final int id = item.getItemId();
-
-        switch (id) {
-            case R.id.action_help:
-                startHelp();
-                return true;
-
-            case R.id.action_connected_settings:
-                startConnectedSettings();
-                return true;
-
-            case R.id.action_refreshcache:
-                if (mBleManager != null) {
-                    mBleManager.refreshDeviceCache();
-                }
-                break;
-
-            case R.id.action_mqttsettings:
-                Intent intent = new Intent(this, MqttUartSettingsActivity.class);
-                startActivityForResult(intent, kActivityRequestCode_MqttSettingsActivity);
-                break;
-
-            case R.id.action_displaymode_timestamp:
-                setDisplayFormatToTimestamp(true);
-                recreateDataView();
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_displaymode_text:
-                setDisplayFormatToTimestamp(false);
-                recreateDataView();
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_datamode_hex:
-                mShowDataInHexFormat = true;
-                recreateDataView();
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_datamode_ascii:
-                mShowDataInHexFormat = false;
-                recreateDataView();
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_echo:
-                mIsEchoEnabled = !mIsEchoEnabled;
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_eol:
-                mIsEolEnabled = !mIsEolEnabled;
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_eolmode_n:
-                mEolCharactersId = 0;
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_eolmode_r:
-                mEolCharactersId = 1;
-                invalidateOptionsMenu();
-                return true;
-
-
-            case R.id.action_eolmode_nr:
-                mEolCharactersId = 2;
-                invalidateOptionsMenu();
-                return true;
-
-            case R.id.action_eolmode_rn:
-                mEolCharactersId = 3;
-                invalidateOptionsMenu();
-                return true;
-
-        }
-
         return super.onOptionsItemSelected(item);
     }
 
-    private void startConnectedSettings() {
-        // Launch connected settings activity
-        Intent intent = new Intent(this, ConnectedSettingsActivity.class);
-        startActivityForResult(intent, kActivityRequestCode_ConnectedSettingsActivity);
-    }
 
     @Override
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
@@ -535,15 +297,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
 
         }
     }
-
-    private void startHelp() {
-        // Launch app help activity
-        Intent intent = new Intent(this, CommonHelpActivity.class);
-        intent.putExtra("title", getString(R.string.uart_help_title));
-        intent.putExtra("help", "uart_help.html");
-        startActivity(intent);
-    }
-    // endregion
 
 
     @Override
@@ -596,15 +349,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
                         updateUI();
                     }
                 });
-
-                // MQTT publish to RX
-                MqttSettings settings = MqttSettings.getInstance(UartActivity.this);
-                if (settings.isPublishEnabled()) {
-                    String topic = settings.getPublishTopic(MqttUartSettingsActivity.kPublishFeed_RX);
-                    final int qos = settings.getPublishQos(MqttUartSettingsActivity.kPublishFeed_RX);
-                    final String text = BleUtils.bytesToText(bytes, false);
-                    mMqttManager.publish(topic, text, qos);
-                }
             }
         }
     }
@@ -622,7 +366,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     }
 
     private void updateUI() {
-        mSentBytesTextView.setText(String.format(getString(R.string.uart_sentbytes_format), mSentBytes));
         mReceivedBytesTextView.setText(String.format(getString(R.string.uart_receivedbytes_format), mReceivedBytes));
     }
 
@@ -653,31 +396,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
                 mBufferTextView.setText(mTextSpanBuffer);
                 mBufferTextView.setSelection(0, mTextSpanBuffer.length());        // to automatically scroll to the end
             }
-        }
-    }
-
-    private void recreateDataView() {
-
-        if (mIsTimestampDisplayMode) {
-            mBufferListAdapter.clear();
-
-            final int bufferSize = mDataBuffer.size();
-            for (int i = 0; i < bufferSize; i++) {
-
-                final UartDataChunk dataChunk = mDataBuffer.get(i);
-                final boolean isRX = dataChunk.getMode() == UartDataChunk.TRANSFERMODE_RX;
-                final byte[] bytes = dataChunk.getData();
-                final String formattedData = mShowDataInHexFormat ? BleUtils.bytesToHex2(bytes) : BleUtils.bytesToText(bytes, true);
-
-                final String currentDateTimeString = DateFormat.getTimeInstance().format(new Date(dataChunk.getTimestamp()));
-                mBufferListAdapter.add(new TimestampData("[" + currentDateTimeString + "] " + (isRX ? "RX" : "TX") + ": " + formattedData, isRX ? mRxColor : mTxColor));
-//                mBufferListAdapter.add("[" + currentDateTimeString + "] " + (isRX ? "RX" : "TX") + ": " + formattedData);
-            }
-            mBufferListView.setSelection(mBufferListAdapter.getCount());
-        } else {
-            mDataBufferLastSize = 0;
-            mTextSpanBuffer.clear();
-            mBufferTextView.setText("");
         }
     }
 
@@ -729,33 +447,6 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     // endregion
 
 
-    // region MqttManagerListener
-
-    @Override
-    public void onMqttConnected() {
-        updateMqttStatus();
-    }
-
-    @Override
-    public void onMqttDisconnected() {
-        updateMqttStatus();
-    }
-
-    @Override
-    public void onMqttMessageArrived(String topic, MqttMessage mqttMessage) {
-        final String message = new String(mqttMessage.getPayload());
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                uartSendData(message, true);       // Don't republish to mqtt something received from mqtt
-            }
-        });
-
-    }
-
-    // endregion
-
-
     // region TimestampAdapter
     private class TimestampData {
         String text;
@@ -789,8 +480,9 @@ public class UartActivity extends UartInterfaceActivity implements MqttManager.M
     }
     // endregion
 
-    // spotify handling stuff
 
+
+    // spotify handling stuff
     public void nextSong() {
         Intent playSpotify = new Intent("com.spotify.mobile.android.ui.widget.NEXT");
         playSpotify.setPackage("com.spotify.music");

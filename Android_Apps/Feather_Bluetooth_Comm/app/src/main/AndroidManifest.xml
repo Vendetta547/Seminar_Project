@@ -57,11 +57,11 @@
         </activity>
         <activity
             android:name=".app.CommonHelpActivity"
-            android:parentActivityName=".app.InfoActivity"
             android:screenOrientation="fullUser">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.InfoActivity" />
+                android:value="com.adafruit.bluefruit.le.connect.app.MainActivity"
+              />
         </activity>
         <activity
             android:name=".app.UartActivity"
@@ -71,15 +71,6 @@
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.adafruit.bluefruit.le.connect.app.MainActivity" />
-        </activity>
-        <activity
-            android:name=".app.PadActivity"
-            android:label="@string/title_activity_pad"
-            android:parentActivityName=".app.ControllerActivity"
-            android:screenOrientation="fullUser">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.ControllerActivity" />
         </activity>
         <activity
             android:name=".app.settings.SettingsActivity"
@@ -95,49 +86,6 @@
         <activity
             android:name=".app.settings.ConnectedSettingsActivity"
             android:label="@string/title_activity_connected_settings" />
-        <activity
-            android:name=".app.settings.MqttUartSettingsActivity"
-            android:label="@string/title_activity_mqtt"
-            android:parentActivityName=".app.UartActivity">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.UartActivity" />
-        </activity>
-        <activity
-            android:name=".app.settings.MqttUartSettingsCodeReaderActivity"
-            android:label="@string/title_activity_mqtt_uart_settings_code_reader"
-            android:parentActivityName=".app.settings.MqttUartSettingsActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.settings.MqttUartSettingsActivity" />
-        </activity>
-        <activity
-            android:name=".app.neopixel.NeopixelActivity"
-            android:label="@string/title_activity_neopixel"
-            android:parentActivityName=".app.MainActivity"
-            android:screenOrientation="fullUser">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.MainActivity" />
-        </activity>
-        <activity
-            android:name=".app.neopixel.NeopixelColorPickerActivity"
-            android:theme="@style/AppTheme.NoActionBarDialog" />
-        <activity
-            android:name=".app.neopixel.NeopixelBoardSelectorActivity"
-            android:theme="@style/AppTheme.NoActionBarDialog" />
-        <activity
-            android:name=".app.neopixel.NeopixelBoardTypeActivity"
-            android:theme="@style/AppTheme.NoActionBarDialog" />
-        <activity
-            android:name=".app.neopixel.NeopixelHelpActivity"
-            android:parentActivityName=".app.neopixel.NeopixelActivity"
-            android:screenOrientation="fullUser">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.neopixel.NeopixelActivity" />
-        </activity>
 
 
         <provider
