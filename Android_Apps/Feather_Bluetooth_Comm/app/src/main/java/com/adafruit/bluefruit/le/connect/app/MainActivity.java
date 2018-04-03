@@ -43,7 +43,6 @@ import android.widget.Toast;
 
 import com.adafruit.bluefruit.le.connect.R;
 import com.adafruit.bluefruit.le.connect.app.settings.SettingsActivity;
-import com.adafruit.bluefruit.le.connect.app.update.FirmwareUpdater;
 import com.adafruit.bluefruit.le.connect.app.update.ReleasesParser;
 import com.adafruit.bluefruit.le.connect.ble.BleDevicesScanner;
 import com.adafruit.bluefruit.le.connect.ble.BleManager;
@@ -63,7 +62,7 @@ import java.util.UUID;
 import static android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 
 
-public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener, FirmwareUpdater.FirmwareUpdaterListener {
+public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener {
     // Constants
     private final static String TAG = MainActivity.class.getSimpleName();
     private final static long kMinDelayToUpdateUI = 200;    // in milliseconds
@@ -90,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private BleManager mBleManager;
     private boolean mIsScanPaused = true;
     private BleDevicesScanner mScanner;
-    private FirmwareUpdater mFirmwareUpdater;
     private PeripheralList mPeripheralList;
 
     private ArrayList<BluetoothDeviceData> mScannedDevices;
@@ -154,20 +152,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             boolean disableWifi = sharedPreferences.getBoolean("pref_disableWifi", false);
             boolean updatesEnabled = sharedPreferences.getBoolean("pref_updatesenabled", true);
 
-            // Update SoftwareUpdateManager
-            if (updatesEnabled) {
-                mFirmwareUpdater = new FirmwareUpdater(this, this);
-                mFirmwareUpdater.refreshSoftwareUpdatesDatabase();
-            }
-
-            // Turn off wifi
-            if (disableWifi) {
-                final boolean isWifiEnabled = BleUtils.isWifiEnabled(this);
-                if (isWifiEnabled) {
-                    BleUtils.enableWifi(false, this);
-                    mShouldEnableWifiOnQuit = true;
-                }
-            }
 
             // Check if bluetooth adapter is available
             final boolean wasBluetoothEnabled = manageBluetoothAvailability();
@@ -473,14 +457,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             }
         } else if (requestCode == kActivityRequestCode_Settings) {
             // Return from activity settings. Update app behaviour if needed
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-            boolean updatesEnabled = sharedPreferences.getBoolean("pref_updatesenabled", true);
-            if (updatesEnabled) {
-                mLatestCheckedDeviceAddress = null;
-                mFirmwareUpdater.refreshSoftwareUpdatesDatabase();
-            } else {
-                mFirmwareUpdater = null;
-            }
+
         }
     }
 
@@ -587,9 +564,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mScanner = new BleDevicesScanner(bluetoothAdapter, servicesToScan, new BluetoothAdapter.LeScanCallback() {
                 @Override
                 public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
-                    //final String deviceName = device.getName();
-                    //Log.d(TAG, "Discovered device: " + (deviceName != null ? deviceName : "<unknown>"));
-
                     BluetoothDeviceData previouslyScannedDeviceData = null;
                     if (mScannedDevices == null)
                         mScannedDevices = new ArrayList<>();       // Safeguard
@@ -834,32 +808,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     }
     // endregion
-
-    // region SoftwareUpdateManagerListener
-    @Override
-    public void onFirmwareUpdatesChecked(boolean isUpdateAvailable, final ReleasesParser.FirmwareInfo latestRelease, FirmwareUpdater.DeviceInfoData deviceInfoData, Map<String, ReleasesParser.BoardInfo> allReleases) {
-    }
-
-    @Override
-    public void onUpdateCancelled() {
-
-    }
-
-    @Override
-    public void onUpdateCompleted() {
-
-    }
-
-    @Override
-    public void onUpdateFailed(boolean isDownloadError) {
-
-    }
-
-    @Override
-    public void onUpdateDeviceDisconnected() {
-    }
-
-    // endregion
+    
 
     // region Helpers
     private class BluetoothDeviceData {
@@ -1318,7 +1267,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         private ArrayList<BluetoothDeviceData> mScannedDevices;
         private Class<?> mComponentToStartWhenConnected;
         private boolean mShouldEnableWifiOnQuit;
-        private FirmwareUpdater mFirmwareUpdater;
         private String mLatestCheckedDeviceAddress;
         private BluetoothDeviceData mSelectedDeviceData;
 
@@ -1347,13 +1295,9 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mScannedDevices = mRetainedDataFragment.mScannedDevices;
             mComponentToStartWhenConnected = mRetainedDataFragment.mComponentToStartWhenConnected;
             mShouldEnableWifiOnQuit = mRetainedDataFragment.mShouldEnableWifiOnQuit;
-            mFirmwareUpdater = mRetainedDataFragment.mFirmwareUpdater;
             mLatestCheckedDeviceAddress = mRetainedDataFragment.mLatestCheckedDeviceAddress;
             mSelectedDeviceData = mRetainedDataFragment.mSelectedDeviceData;
 
-            if (mFirmwareUpdater != null) {
-                mFirmwareUpdater.changedParentActivity(this);       // set the new activity
-            }
         }
     }
 
@@ -1361,7 +1305,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         mRetainedDataFragment.mScannedDevices = mScannedDevices;
         mRetainedDataFragment.mComponentToStartWhenConnected = mComponentToStartWhenConnected;
         mRetainedDataFragment.mShouldEnableWifiOnQuit = mShouldEnableWifiOnQuit;
-        mRetainedDataFragment.mFirmwareUpdater = mFirmwareUpdater;
         mRetainedDataFragment.mLatestCheckedDeviceAddress = mLatestCheckedDeviceAddress;
         mRetainedDataFragment.mSelectedDeviceData = mSelectedDeviceData;
     }
