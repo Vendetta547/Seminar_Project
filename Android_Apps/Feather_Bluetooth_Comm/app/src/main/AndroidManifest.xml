@@ -72,28 +72,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.adafruit.bluefruit.le.connect.app.MainActivity" />
         </activity>
-        <activity
-            android:name=".app.settings.SettingsActivity"
-            android:label="@string/title_activity_settings"
-            android:parentActivityName=".app.MainActivity"
-            android:screenOrientation="fullUser" />
-        <activity
-            android:name=".app.update.NotificationActivity"
-            android:label="@string/dfu_feature_title" />
-
-        <service android:name=".app.update.DfuService" />
 
 
-        <provider
-            android:name=".utils.LegacyCompatFileProvider"
-            android:authorities="com.adafruit.bluefruit.le.connect.fileprovider"
-            android:exported="false"
-            android:grantUriPermissions="true">
-            <meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/provider_paths" />
-
-        </provider>
     </application>
 
 </manifest>

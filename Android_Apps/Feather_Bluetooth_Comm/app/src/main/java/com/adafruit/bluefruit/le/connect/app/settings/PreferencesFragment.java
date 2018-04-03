@@ -17,7 +17,6 @@ import android.util.Log;
 import com.adafruit.bluefruit.le.connect.BuildConfig;
 import com.adafruit.bluefruit.le.connect.R;
 import com.adafruit.bluefruit.le.connect.app.UartActivity;
-import com.adafruit.bluefruit.le.connect.app.update.FirmwareUpdater;
 
 
 public class PreferencesFragment extends PreferenceFragment implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -139,11 +138,7 @@ public class PreferencesFragment extends PreferenceFragment implements SharedPre
         }
         else if (key.equals("pref_updateserver"))
         {
-            // Set updateserver
-            String updateServer = sharedPreferences.getString("pref_updateserver", FirmwareUpdater.kDefaultUpdateServerUrl);
-            EditTextPreference etp = (EditTextPreference) findPreference("pref_updateserver");
-            etp.setSummary(updateServer);
-            etp.setText(updateServer);
+
         }
     }
 

@@ -42,8 +42,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.adafruit.bluefruit.le.connect.R;
-import com.adafruit.bluefruit.le.connect.app.settings.SettingsActivity;
-import com.adafruit.bluefruit.le.connect.app.update.ReleasesParser;
 import com.adafruit.bluefruit.le.connect.ble.BleDevicesScanner;
 import com.adafruit.bluefruit.le.connect.ble.BleManager;
 import com.adafruit.bluefruit.le.connect.ble.BleUtils;
@@ -56,7 +54,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.UUID;
 
 import static android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
@@ -185,12 +182,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         if (id == R.id.action_help) {
             startHelp();
             return true;
-        } else if (id == R.id.action_settings) {
-            Intent intent = new Intent();
-            intent.setClass(MainActivity.this, SettingsActivity.class);
-            startActivityForResult(intent, kActivityRequestCode_Settings);
-            return true;
-        } else if (id == R.id.action_licenses) {
+        }  else if (id == R.id.action_licenses) {
             Intent intent = new Intent(this, CommonHelpActivity.class);
             intent.putExtra("title", getString(R.string.licenses_title));
             intent.putExtra("help", "licenses.html");
@@ -808,7 +800,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     }
     // endregion
-    
+
 
     // region Helpers
     private class BluetoothDeviceData {
