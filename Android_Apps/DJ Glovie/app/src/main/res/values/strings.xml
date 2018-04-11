@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">DJ Glovie</string>
+    <string name="button_connect">CONNECT</string>
+    <string name="button_help">HELP</string>
+    <string name="button_about">ABOUT</string>
+    <string name="button_disconnect">DISCONNECT</string>
+</resources>
