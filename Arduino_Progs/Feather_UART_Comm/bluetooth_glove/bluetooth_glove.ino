@@ -49,7 +49,7 @@ const int play_button3 = 11;
 void setup(void)
 {
   pinMode(play_button, INPUT);
- // while (!Serial);  // required for Flora & Micro
+  while (!Serial);  // required for Flora & Micro
   delay(500);
 
   Serial.begin(115200);
@@ -100,6 +100,11 @@ void setup(void)
     Serial.println(F("Change LED activity to " MODE_LED_BEHAVIOUR));
     ble.sendCommandCheckOK("AT+HWModeLED=" MODE_LED_BEHAVIOUR);
     Serial.println(F("******************************"));
+  }
+  /* Change the device name to make it easier to find */
+  Serial.println(F("Setting device name to 'Bluefruit Keyboard': "));
+  if (! ble.sendCommandCheckOK(F( "AT+GAPDEVNAME=Test Change" )) ) {
+    error(F("Could not set device name?"));
   }
 }
 

@@ -17,4 +17,7 @@ public class connected_activ extends AppCompatActivity {
         Intent disconnect_intent = new Intent(this,MainActivity.class);
         startActivity(disconnect_intent);
     }
+
+    @Override
+    public void onBackPressed() { }
 }

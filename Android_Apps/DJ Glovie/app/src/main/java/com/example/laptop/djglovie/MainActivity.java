@@ -30,4 +30,7 @@ public class MainActivity extends AppCompatActivity {
         startActivity(about_intent);
     }
 
+    @Override
+    public void onBackPressed() { }
+
 }
