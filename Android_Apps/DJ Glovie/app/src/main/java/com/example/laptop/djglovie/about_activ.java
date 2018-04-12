@@ -14,7 +14,7 @@ public class about_activ extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_about_activ);
 
-        setTitle("About Us");
+        setTitle("About");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         WebView infoWebView = (WebView) findViewById(R.id.infoWebView);
