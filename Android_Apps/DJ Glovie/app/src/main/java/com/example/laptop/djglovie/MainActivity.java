@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void helpClick (View view)   // help button pressed
     {
-        Intent help_intent = new Intent(this,about_activ.class);
+        Intent help_intent = new Intent(this,help_activ.class);
         startActivity(help_intent);
     }
     public void aboutClick (View view)  // about button pressed

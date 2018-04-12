@@ -18,6 +18,17 @@ public class connected_activ extends AppCompatActivity {
         startActivity(disconnect_intent);
     }
 
+    public void helpClick (View view)   // help button pressed
+    {
+        Intent help_intent = new Intent(this,help_activ.class);
+        startActivity(help_intent);
+    }
+    public void aboutClick (View view)  // about button pressed
+    {
+        Intent about_intent = new Intent(this,about_activ.class);
+        startActivity(about_intent);
+    }
+
     @Override
     public void onBackPressed() { }
 }
