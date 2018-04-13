@@ -72,8 +72,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private static final int kActivityRequestCode_ConnectedActivity = 3;
 
     // UI
-    private ExpandableHeightExpandableListView mScannedDevicesListView;
-    private ExpandableListAdapter mScannedDevicesAdapter;
     private Button mScanButton;
     private long mLastUpdateMillis;
     private TextView mNoDevicesTextView;
@@ -106,17 +104,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         restoreRetainedDataFragment();
         mPeripheralList = new PeripheralList();
 
-        // UI
-        mScannedDevicesListView = (ExpandableHeightExpandableListView) findViewById(R.id.scannedDevicesListView);
-        mScannedDevicesAdapter = new ExpandableListAdapter();
-        mScannedDevicesListView.setAdapter(mScannedDevicesAdapter);
-        mScannedDevicesListView.setExpanded(true);
-
-        mScannedDevicesListView.setOnGroupExpandListener(new ExpandableListView.OnGroupExpandListener() {
-            @Override
-            public void onGroupExpand(int groupPosition) {
-            }
-        });
 
         mScanButton = (Button) findViewById(R.id.scanButton);
 
@@ -492,41 +479,20 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
-    // region Actions
-    public void onClickScannedDevice(final View view) {
-        final int groupPosition = (Integer) view.getTag();
 
-        if (mScannedDevicesListView.isGroupExpanded(groupPosition)) {
-            mScannedDevicesListView.collapseGroup(groupPosition);
-        } else {
-            mScannedDevicesListView.expandGroup(groupPosition, true);
-
-            // Force scrolling to view the children
-            mDevicesScrollView.post(new Runnable() {
-                @Override
-                public void run() {
-                    mScannedDevicesListView.scrollToGroup(groupPosition, view, mDevicesScrollView);
-                }
-            });
-        }
-    }
-
-    public void onClickDeviceConnect(int scannedDeviceIndex) {
+    public void onClickDeviceConnect(View view) {
         stopScanning();
 
         ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
-        if (scannedDeviceIndex < filteredPeripherals.size()) {
-            mSelectedDeviceData = filteredPeripherals.get(scannedDeviceIndex);
-            BluetoothDevice device = mSelectedDeviceData.device;
-
+        //if (scannedDeviceIndex < filteredPeripherals.size()) {
+            int i;
+            for (i = 0; i < filteredPeripherals.size(); i++) {
+                if (filteredPeripherals.get(i).getName().equals("Bluefruit Keyboard")) {
+                    mSelectedDeviceData = filteredPeripherals.get(i);
+                }
+            }
             mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
 
-            if (mSelectedDeviceData.type == BluetoothDeviceData.kType_Uart) {      // if is uart, show all the available activities
-                //showChooseDeviceServiceDialog(mSelectedDeviceData);
-            }
-        } else {
-            Log.w(TAG, "onClickDeviceConnect index does not exist: " + scannedDeviceIndex);
-        }
         mComponentToStartWhenConnected = UartActivity.class;
         connect(mSelectedDeviceData.device);
     }
@@ -755,8 +721,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         mNoDevicesTextView.setVisibility(isListEmpty ? View.VISIBLE : View.GONE);
         mDevicesScrollView.setVisibility(isListEmpty ? View.GONE : View.VISIBLE);
 
-        // devices list
-        mScannedDevicesAdapter.notifyDataSetChanged();
     }
 
     // region ResetBluetoothAdapterListener
@@ -1146,16 +1110,10 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             convertView.setTag(groupPosition);
             holder.connectButton.setTag(groupPosition);
 
-            convertView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    onClickScannedDevice(v);
-                }
-            });
 
 
 
-            holder.connectButton.setOnTouchListener(new View.OnTouchListener() {
+           /* holder.connectButton.setOnTouchListener(new View.OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     if (event.getAction() == MotionEvent.ACTION_DOWN) {
@@ -1164,7 +1122,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     }
                     return false;
                 }
-            });
+            });*/
 
 
             BluetoothDeviceData deviceData = mFilteredPeripherals.get(groupPosition);
