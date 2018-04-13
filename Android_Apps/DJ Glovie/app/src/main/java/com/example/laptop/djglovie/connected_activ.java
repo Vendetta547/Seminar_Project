@@ -14,6 +14,9 @@ public class connected_activ extends AppCompatActivity {
     }
     public void disconnectClick (View view)
     {
+        Intent stopIntent = new Intent(this, ForegroundService.class);
+        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+        startService(stopIntent);
         Intent disconnect_intent = new Intent(this,MainActivity.class);
         startActivity(disconnect_intent);
     }
@@ -29,6 +32,19 @@ public class connected_activ extends AppCompatActivity {
         startActivity(about_intent);
     }
 
+    public void contactClick (View view)  // about button pressed
+    {
+        Intent contact_intent = new Intent(this,contact_activ.class);
+        startActivity(contact_intent);
+    }
+
     @Override
     public void onBackPressed() { }
+
+    public void onDestroy() {
+        super.onDestroy();
+        Intent stopIntent = new Intent(this, ForegroundService.class);
+        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+        startService(stopIntent);
+    }
 }

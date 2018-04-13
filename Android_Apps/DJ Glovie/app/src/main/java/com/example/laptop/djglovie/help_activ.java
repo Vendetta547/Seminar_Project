@@ -11,7 +11,7 @@ public class help_activ extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_help_activ);
+        setContentView(R.layout.activity_contact);
 
         setTitle("Help");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);

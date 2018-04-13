@@ -18,7 +18,10 @@
         </activity>
         <activity android:name=".connected_activ" />
         <activity android:name=".help_activ" />
-        <activity android:name=".about_activ"></activity>
+        <activity android:name=".about_activ" />
+        <activity android:name=".contact_activ" />
+
+        <service android:name=".ForegroundService" />
     </application>
 
 </manifest>
