@@ -49,7 +49,7 @@ const int play_button3 = 11;
 void setup(void)
 {
   pinMode(play_button, INPUT);
-  while (!Serial);  // required for Flora & Micro
+  //while (!Serial);  // required for Flora & Micro
   delay(500);
 
   Serial.begin(115200);
