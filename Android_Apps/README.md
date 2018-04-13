@@ -1,4 +1,4 @@
-# DJ Glovie
+## DJ Glovie
 Contains all the UI code independent of the functional back-end bluetooth code. This is the front end of our project. 
 
 # Feather_Bluetooth_Comm
