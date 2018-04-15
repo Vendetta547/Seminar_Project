@@ -106,42 +106,48 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     {
         stopScanning();
 
-        // array of all nearby bluetooth devices
-        ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
-
         // toast popup in case bad stuff happens
         Context context = getApplicationContext();
         CharSequence text = "Glove not detected.";
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
 
+        if (mScannedDevices != null && mScannedDevices.size() != 0) {
+            // array of all nearby bluetooth devices
+            ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
 
-        Log.d(TAG, "Stop scanning");
-       // Log.d(TAG, Integer.toString(filteredPeripherals.size()));
-       // Log.d(TAG, filteredPeripherals.get(0).getName());
 
-        // check if glove is powered on and ready to connect
-        boolean glovesFound = false;
-        if (filteredPeripherals != null) {
-            for (int i = 0; i < filteredPeripherals.size(); i++) {
-                if (filteredPeripherals.get(i).getName().equals("Adafruit Bluefruit LE")) {
-                    mSelectedDeviceData = filteredPeripherals.get(i);
-                    glovesFound = true;
+            Log.d(TAG, "Stop scanning");
+            // Log.d(TAG, Integer.toString(filteredPeripherals.size()));
+            // Log.d(TAG, filteredPeripherals.get(0).getName());
+
+            // check if glove is powered on and ready to connect
+            boolean gloveFound = false;
+            if (filteredPeripherals != null) {
+                for (int i = 0; i < filteredPeripherals.size(); i++) {
+                    if (filteredPeripherals.get(i).getName().equals("Adafruit Bluefruit LE")) {
+                        mSelectedDeviceData = filteredPeripherals.get(i);
+                        gloveFound = true;
+                    }
                 }
             }
-        }
 
-        if (mScannedDevices == null || mScannedDevices.size() == 0 || !glovesFound) {
+            if (gloveFound) {
+                Intent startIntent = new Intent(this, ForegroundService.class);
+                startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                startService(startIntent);
+                mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
+                mComponentToStartWhenConnected = UartActivity.class;
+                connect(mSelectedDeviceData.device);
+            } else {
+                mScannedDevices.clear();
+                startScan(null);
+                toast.show();
+            }
+        } else {
             mScannedDevices.clear();
             startScan(null);
             toast.show();
-        } else {
-            Intent startIntent = new Intent(this, ForegroundService.class);
-            startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-            startService(startIntent);
-            mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
-            mComponentToStartWhenConnected = UartActivity.class;
-            connect(mSelectedDeviceData.device);
         }
     }
 
