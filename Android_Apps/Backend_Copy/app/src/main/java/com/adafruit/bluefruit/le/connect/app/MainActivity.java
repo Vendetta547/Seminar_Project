@@ -10,8 +10,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.content.ClipData;
-import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -22,32 +21,16 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.text.Html;
-import android.text.Spanned;
 import android.util.Log;
 import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.Button;
-import android.widget.ExpandableListView;
-import android.widget.ImageView;
-import android.widget.ScrollView;
-import android.widget.TextView;
 import android.widget.Toast;
-
 import com.adafruit.bluefruit.le.connect.R;
 import com.adafruit.bluefruit.le.connect.ble.BleDevicesScanner;
 import com.adafruit.bluefruit.le.connect.ble.BleManager;
 import com.adafruit.bluefruit.le.connect.ble.BleUtils;
 import com.adafruit.bluefruit.le.connect.ui.utils.DialogUtils;
-import com.adafruit.bluefruit.le.connect.ui.utils.ExpandableHeightExpandableListView;
-
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -55,9 +38,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.UUID;
-
-import static android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
-
 
 public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener {
     // Constants
@@ -72,11 +52,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private static final int kActivityRequestCode_ConnectedActivity = 3;
 
     // UI
-    private Button mScanButton;
     private long mLastUpdateMillis;
-    private TextView mNoDevicesTextView;
-    private ScrollView mDevicesScrollView;
-    private SwipeRefreshLayout mSwipeRefreshLayout;
 
     private AlertDialog mConnectingDialog;
 
@@ -105,37 +81,11 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         mPeripheralList = new PeripheralList();
 
 
-        mScanButton = (Button) findViewById(R.id.scanButton);
-
-        mNoDevicesTextView = (TextView) findViewById(R.id.nodevicesTextView);
-        mDevicesScrollView = (ScrollView) findViewById(R.id.devicesScrollView);
-        mDevicesScrollView.setVisibility(View.GONE);
-
-        mSwipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshLayout);
-        mSwipeRefreshLayout.setOnRefreshListener(new OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                mScannedDevices.clear();
-                startScan(null);
-
-                mSwipeRefreshLayout.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mSwipeRefreshLayout.setRefreshing(false);
-                    }
-                }, 500);
-            }
-        });
-
-
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
             // Read preferences
             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
             boolean autoResetBluetoothOnStart = sharedPreferences.getBoolean("pref_resetble", false);
-            boolean disableWifi = sharedPreferences.getBoolean("pref_disableWifi", false);
-            boolean updatesEnabled = sharedPreferences.getBoolean("pref_updatesenabled", true);
-
 
             // Check if bluetooth adapter is available
             final boolean wasBluetoothEnabled = manageBluetoothAvailability();
@@ -151,32 +101,71 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         requestLocationPermissionIfNeeded();
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
+    public void connectClick (View view)    // connect button pressed
+    {
+        stopScanning();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_help) {
-            startHelp();
-            return true;
-        }  else if (id == R.id.action_licenses) {
-            Intent intent = new Intent(this, CommonHelpActivity.class);
-            intent.putExtra("title", getString(R.string.licenses_title));
-            intent.putExtra("help", "licenses.html");
-            startActivity(intent);
+        // array of all nearby bluetooth devices
+        ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
+
+        // toast popup in case bad stuff happens
+        Context context = getApplicationContext();
+        CharSequence text = "Glove not detected.";
+        int duration = Toast.LENGTH_SHORT;
+        Toast toast = Toast.makeText(context, text, duration);
+
+
+        Log.d(TAG, "Stop scanning");
+       // Log.d(TAG, Integer.toString(filteredPeripherals.size()));
+       // Log.d(TAG, filteredPeripherals.get(0).getName());
+
+        // check if glove is powered on and ready to connect
+        boolean glovesFound = false;
+        if (filteredPeripherals != null) {
+            for (int i = 0; i < filteredPeripherals.size(); i++) {
+                if (filteredPeripherals.get(i).getName().equals("Adafruit Bluefruit LE")) {
+                    mSelectedDeviceData = filteredPeripherals.get(i);
+                    glovesFound = true;
+                }
+            }
         }
-        return super.onOptionsItemSelected(item);
+
+        if (mScannedDevices == null || mScannedDevices.size() == 0 || !glovesFound) {
+            mScannedDevices.clear();
+            startScan(null);
+            toast.show();
+        } else {
+            Intent startIntent = new Intent(this, ForegroundService.class);
+            startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+            startService(startIntent);
+            mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
+            mComponentToStartWhenConnected = UartActivity.class;
+            connect(mSelectedDeviceData.device);
+        }
     }
+
+    public void helpClick (View view)   // help button pressed
+    {
+        Intent help_intent = new Intent(this,help_activ.class);
+        startActivity(help_intent);
+    }
+
+    public void aboutClick (View view)  // about button pressed
+    {
+        Intent about_intent = new Intent(this,about_activ.class);
+        startActivity(about_intent);
+    }
+
+    public void contactClick (View view)  // about button pressed
+    {
+        Intent contact_intent = new Intent(this,contact_activ.class);
+        startActivity(contact_intent);
+    }
+
+    @Override
+    public void onBackPressed() { }
+
 
     @Override
     public void onResume() {
@@ -187,9 +176,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
         // Autostart scan
         autostartScan();
-
-        // Update UI
-        updateUI();
     }
 
     private void autostartScan() {
@@ -211,6 +197,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         if (mScanner != null && mScanner.isScanning()) {
             mIsScanPaused = true;
             stopScanning();
+            mScannedDevices.clear();
         }
 
         super.onPause();
@@ -225,34 +212,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         super.onStop();
     }
 
-    @Override
-    public void onBackPressed() {
-        if (mShouldEnableWifiOnQuit) {
-            mShouldEnableWifiOnQuit = false;
-            new AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.settingsaction_confirmenablewifi_title))
-                    .setMessage(getString(R.string.settingsaction_confirmenablewifi_message))
-                    .setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            Log.d(TAG, "enableNotification wifi");
-                            BleUtils.enableWifi(true, MainActivity.this);
-                            MainActivity.super.onBackPressed();
-                        }
-
-                    })
-                    .setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            MainActivity.super.onBackPressed();
-                        }
-
-                    })
-                    .show();
-        } else {
-            super.onBackPressed();
-        }
-    }
 
     @Override
     protected void onDestroy() {
@@ -298,8 +257,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     Log.d(TAG, "Location permission granted");
                     // Autostart scan
                     autostartScan();
-                    // Update UI
-                    updateUI();
                 } else {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setTitle("Bluetooth Scanning not available");
@@ -408,11 +365,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
-    private void startHelp() {
-        // Launch app help activity
-        Intent intent = new Intent(this, MainHelpActivity.class);
-        startActivity(intent);
-    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -480,33 +432,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
-    public void onClickDeviceConnect(View view) {
-        stopScanning();
-
-        ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
-        //if (scannedDeviceIndex < filteredPeripherals.size()) {
-            int i;
-            for (i = 0; i < filteredPeripherals.size(); i++) {
-                if (filteredPeripherals.get(i).getName().equals("Bluefruit Keyboard")) {
-                    mSelectedDeviceData = filteredPeripherals.get(i);
-                }
-            }
-            mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
-
-        mComponentToStartWhenConnected = UartActivity.class;
-        connect(mSelectedDeviceData.device);
-    }
-
-    public void onClickScan(View view) {
-        boolean isScanning = mScanner != null && mScanner.isScanning();
-        if (isScanning) {
-            stopScanning();
-        } else {
-            startScan(null);
-        }
-    }
-    // endregion
-
     // region Scan
     private void startScan(final UUID[] servicesToScan) {
         Log.d(TAG, "startScan");
@@ -552,13 +477,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     long currentMillis = SystemClock.uptimeMillis();
                     if (previouslyScannedDeviceData == null || currentMillis - mLastUpdateMillis > kMinDelayToUpdateUI) {          // Avoid updating when not a new device has been found and the time from the last update is really short to avoid updating UI so fast that it will become unresponsive
                         mLastUpdateMillis = currentMillis;
-
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                updateUI();
-                            }
-                        });
                     }
 
                 }
@@ -568,8 +486,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mScanner.start();
         }
 
-        // Update UI
-        updateUI();
     }
 
     private void stopScanning() {
@@ -578,8 +494,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mScanner.stop();
             mScanner = null;
         }
-
-        updateUI();
     }
     // endregion
 
@@ -711,17 +625,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
-    private void updateUI() {
-        // Scan button
-        boolean isScanning = mScanner != null && mScanner.isScanning();
-        mScanButton.setText(getString(isScanning ? R.string.scan_scanbutton_scanning : R.string.scan_scanbutton_scan));
-
-        // Show list and hide "no devices" label
-        final boolean isListEmpty = mScannedDevices == null || mScannedDevices.size() == 0;
-        mNoDevicesTextView.setVisibility(isListEmpty ? View.VISIBLE : View.GONE);
-        mDevicesScrollView.setVisibility(isListEmpty ? View.GONE : View.VISIBLE);
-
-    }
 
     // region ResetBluetoothAdapterListener
     @Override
@@ -921,296 +824,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
     // endregion
 
-
-    // region adapters
-    private class ExpandableListAdapter extends BaseExpandableListAdapter {
-        // Data
-        private ArrayList<BluetoothDeviceData> mFilteredPeripherals;
-
-        private class GroupViewHolder {
-            TextView nameTextView;
-            TextView descriptionTextView;
-            ImageView rssiImageView;
-            TextView rssiTextView;
-            Button connectButton;
-        }
-
-        @Override
-        public int getGroupCount() {
-            mFilteredPeripherals = mPeripheralList.filteredPeripherals(true);
-            return mFilteredPeripherals.size();
-        }
-
-        @Override
-        public int getChildrenCount(int groupPosition) {
-            return 1;
-        }
-
-        @Override
-        public Object getGroup(int groupPosition) {
-            return mFilteredPeripherals.get(groupPosition);
-        }
-
-        @Override
-        public Spanned getChild(int groupPosition, int childPosition) {
-            BluetoothDeviceData deviceData = mFilteredPeripherals.get(groupPosition);
-
-            String text;
-            switch (deviceData.type) {
-                case BluetoothDeviceData.kType_Beacon:
-                    text = getChildBeacon(deviceData);
-                    break;
-
-                case BluetoothDeviceData.kType_UriBeacon:
-                    text = getChildUriBeacon(deviceData);
-                    break;
-
-                default:
-                    text = getChildCommon(deviceData);
-                    break;
-            }
-
-            Spanned result;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
-                result = Html.fromHtml(text, Html.FROM_HTML_MODE_LEGACY);
-            } else {
-                result = Html.fromHtml(text);
-            }
-            return result;
-        }
-
-
-        private String getChildUriBeacon(BluetoothDeviceData deviceData) {
-            StringBuilder result = new StringBuilder();
-
-            String name = deviceData.getName();
-            if (name != null) {
-                result.append(getString(R.string.scan_device_localname)).append(": <b>").append(name).append("</b><br>");
-            }
-
-            String address = deviceData.device.getAddress();
-            result.append(getString(R.string.scan_device_address) + ": <b>" + (address == null ? "" : address) + "</b><br>");
-
-           // String uri = UriBeaconUtils.getUriFromAdvertisingPacket(deviceData.scanRecord) + "</b><br>";
-           // result.append(getString(R.string.scan_device_uribeacon_uri)).append(": <b>").append(uri);
-
-            result.append(getString(R.string.scan_device_txpower)).append(": <b>").append(deviceData.txPower).append("</b>");
-
-            return result.toString();
-        }
-
-
-        private String getChildCommon(BluetoothDeviceData deviceData) {
-            StringBuilder result = new StringBuilder();
-
-            String name = deviceData.getName();
-            if (name != null) {
-                result.append(getString(R.string.scan_device_localname)).append(": <b>").append(name).append("</b><br>");
-            }
-            String address = deviceData.device.getAddress();
-            result.append(getString(R.string.scan_device_address)).append(": <b>").append(address == null ? "" : address).append("</b><br>");
-
-            StringBuilder serviceText = new StringBuilder();
-            if (deviceData.uuids != null) {
-                int i = 0;
-                for (UUID uuid : deviceData.uuids) {
-                    if (i > 0) serviceText.append(", ");
-                    serviceText.append(uuid.toString().toUpperCase());
-                    i++;
-                }
-            }
-            if (!serviceText.toString().isEmpty()) {
-                result.append(getString(R.string.scan_device_services)).append(": <b>").append(serviceText).append("</b><br>");
-            }
-            result.append(getString(R.string.scan_device_txpower)).append(": <b>").append(deviceData.txPower).append("</b>");
-
-            return result.toString();
-        }
-
-        private String getChildBeacon(BluetoothDeviceData deviceData) {
-            StringBuilder result = new StringBuilder();
-
-            String name = deviceData.getName();
-            if (name != null) {
-                result.append(getString(R.string.scan_device_localname)).append(": <b>").append(name).append("</b><br>");
-            }
-            String address = deviceData.device.getAddress();
-            result.append(getString(R.string.scan_device_address)).append(": <b>").append(address == null ? "" : address).append("</b><br>");
-
-            final byte[] manufacturerBytes = {deviceData.scanRecord[6], deviceData.scanRecord[5]};      // Little endian
-            String manufacturer = BleUtils.bytesToHex(manufacturerBytes);
-
-            // Check if the manufacturer is known, and replace the id for a name
-            String kKnownManufacturers[] = getResources().getStringArray(R.array.beacon_manufacturers_ids);
-            int knownIndex = Arrays.asList(kKnownManufacturers).indexOf(manufacturer);
-            if (knownIndex >= 0) {
-                String kManufacturerNames[] = getResources().getStringArray(R.array.beacon_manufacturers_names);
-                manufacturer = kManufacturerNames[knownIndex];
-            }
-
-            result.append(getString(R.string.scan_device_beacon_manufacturer)).append(": <b>").append(manufacturer == null ? "" : manufacturer).append("</b><br>");
-
-            StringBuilder text = new StringBuilder();
-            if (deviceData.uuids != null && deviceData.uuids.size() == 1) {
-                UUID uuid = deviceData.uuids.get(0);
-                text.append(uuid.toString().toUpperCase());
-            }
-            result.append(getString(R.string.scan_device_uuid)).append(": <b>").append(text).append("</b><br>");
-
-            final byte[] majorBytes = {deviceData.scanRecord[25], deviceData.scanRecord[26]};           // Big endian
-            String major = BleUtils.bytesToHex(majorBytes);
-            result.append(getString(R.string.scan_device_beacon_major)).append(": <b>").append(major).append("</b><br>");
-
-            final byte[] minorBytes = {deviceData.scanRecord[27], deviceData.scanRecord[28]};           // Big endian
-            String minor = BleUtils.bytesToHex(minorBytes);
-            result.append(getString(R.string.scan_device_beacon_minor)).append(": <b>").append(minor).append("</b><br>");
-
-            result.append(getString(R.string.scan_device_txpower)).append(": <b>").append(deviceData.txPower).append("</b>");
-
-            return result.toString();
-        }
-
-
-        @Override
-        public long getGroupId(int groupPosition) {
-            return groupPosition;
-        }
-
-        @Override
-        public long getChildId(int groupPosition, int childPosition) {
-            return childPosition;
-        }
-
-        @Override
-        public boolean hasStableIds() {
-            return true;
-        }
-
-        @Override
-        public View getGroupView(final int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
-            GroupViewHolder holder;
-
-            if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.layout_scan_item_title, parent, false);
-
-                holder = new GroupViewHolder();
-
-                holder.nameTextView = (TextView) convertView.findViewById(R.id.nameTextView);
-                holder.descriptionTextView = (TextView) convertView.findViewById(R.id.descriptionTextView);
-                holder.rssiImageView = (ImageView) convertView.findViewById(R.id.rssiImageView);
-                holder.rssiTextView = (TextView) convertView.findViewById(R.id.rssiTextView);
-                holder.connectButton = (Button) convertView.findViewById(R.id.connectButton);
-
-                convertView.setTag(R.string.scan_tag_id, holder);
-
-            } else {
-                holder = (GroupViewHolder) convertView.getTag(R.string.scan_tag_id);
-            }
-
-            convertView.setTag(groupPosition);
-            holder.connectButton.setTag(groupPosition);
-
-
-
-
-           /* holder.connectButton.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                        onClickDeviceConnect(groupPosition);
-                        return true;
-                    }
-                    return false;
-                }
-            });*/
-
-
-            BluetoothDeviceData deviceData = mFilteredPeripherals.get(groupPosition);
-            holder.nameTextView.setText(deviceData.getNiceName());
-
-            holder.descriptionTextView.setVisibility(deviceData.type != BluetoothDeviceData.kType_Unknown ? View.VISIBLE : View.INVISIBLE);
-            holder.descriptionTextView.setText(getResources().getStringArray(R.array.scan_devicetypes)[deviceData.type]);
-            holder.rssiTextView.setText(deviceData.rssi == 127 ? getString(R.string.scan_device_rssi_notavailable) : String.valueOf(deviceData.rssi));
-
-            int rrsiDrawableResource = getDrawableIdForRssi(deviceData.rssi);
-            holder.rssiImageView.setImageResource(rrsiDrawableResource);
-
-            return convertView;
-        }
-
-        private int getDrawableIdForRssi(int rssi) {
-            int index;
-            if (rssi == 127 || rssi <= -84) {       // 127 reserved for RSSI not available
-                index = 0;
-            } else if (rssi <= -72) {
-                index = 1;
-            } else if (rssi <= -60) {
-                index = 2;
-            } else if (rssi <= -48) {
-                index = 3;
-            } else {
-                index = 4;
-            }
-
-            final int kSignalDrawables[] = {
-                    R.drawable.signalstrength0,
-                    R.drawable.signalstrength1,
-                    R.drawable.signalstrength2,
-                    R.drawable.signalstrength3,
-                    R.drawable.signalstrength4};
-            return kSignalDrawables[index];
-        }
-
-        @Override
-        public View getChildView(final int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = getLayoutInflater().inflate(R.layout.layout_scan_item_child, parent, false);
-            }
-
-            // We don't expect many items so for clarity just find the views each time instead of using a ViewHolder
-            TextView textView = (TextView) convertView.findViewById(R.id.dataTextView);
-            Spanned text = getChild(groupPosition, childPosition);
-            textView.setText(text);
-
-            Button rawDataButton = (Button) convertView.findViewById(R.id.rawDataButton);
-            rawDataButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
-                    if (groupPosition < filteredPeripherals.size()) {
-                        final BluetoothDeviceData deviceData = filteredPeripherals.get(groupPosition);
-                        final byte[] scanRecord = deviceData.scanRecord;
-                        final String packetText = BleUtils.bytesToHexWithSpaces(scanRecord);
-                        final String clipboardLabel = getString(R.string.scan_device_advertising_title);
-
-                        new AlertDialog.Builder(MainActivity.this)
-                                .setTitle(R.string.scan_device_advertising_title)
-                                .setMessage(packetText)
-                                .setPositiveButton(android.R.string.ok, null)
-                                .setNeutralButton(android.R.string.copy, new DialogInterface.OnClickListener() {
-                                    @Override
-                                    public void onClick(DialogInterface dialog, int which) {
-                                        ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                                        ClipData clip = ClipData.newPlainText(clipboardLabel, packetText);
-                                        clipboard.setPrimaryClip(clip);
-                                    }
-                                })
-                                .show();
-                    }
-
-                }
-            });
-
-            return convertView;
-        }
-
-        @Override
-        public boolean isChildSelectable(int groupPosition, int childPosition) {
-            return false;
-        }
-    }
-
-    //endregion
 
     // region DataFragment
     public static class DataFragment extends Fragment {

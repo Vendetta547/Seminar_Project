@@ -2,7 +2,6 @@
 <resources>
 
     <!-- General -->
-    <string name="app_name">Bluefruit LE</string>
     <string name="app_full_name">Bluefruit LE Connect</string>
     <string name="action_info">Info</string>
     <string name="action_mqttsettings">MQTT</string>
@@ -299,6 +298,26 @@
         <item>At Least Once</item>
         <item>Exactly Once</item>
     </string-array>
+
+
+    <string name="app_name">DJ Glovie</string>
+    <string name="button_connect">CONNECT</string>
+    <string name="button_help">HELP</string>
+    <string name="button_about">ABOUT</string>
+    <string name="button_disconnect">DISCONNECT</string>
+    <string name="button_contact">contact</string>
+
+    <!--Contact Form-->
+    <string name="contact_form">Contact Us</string>
+    <string name="contact_form_name">Your Name</string>
+    <string name="contact_form_email">Your Email</string>
+    <string name="contact_form_subject">Subject</string>
+    <string name="contact_form_message">Message</string>
+    <string name="contact_form_button">Send Message</string>
+    <string name="contact_form_post_message">Please wait! We\'re sending your message to the support department...</string>
+    <string name="contact_posted">Your message has been successfully delivered.</string>
+    <string name="title_activity_contact">ContactActivity</string>
+
 
     <!-- Common -->
 

@@ -487,7 +487,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         //if (scannedDeviceIndex < filteredPeripherals.size()) {
             int i;
             for (i = 0; i < filteredPeripherals.size(); i++) {
-                if (filteredPeripherals.get(i).getName().equals("Bluefruit Keyboard")) {
+                if (filteredPeripherals.get(i).getName().equals("Adafruit Bluefruit LE")) {
                     mSelectedDeviceData = filteredPeripherals.get(i);
                 }
             }

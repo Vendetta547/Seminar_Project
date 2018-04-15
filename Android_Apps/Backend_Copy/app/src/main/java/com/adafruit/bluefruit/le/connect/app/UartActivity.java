@@ -46,51 +46,14 @@ public class UartActivity extends UartInterfaceActivity  {
     // Configuration
     private final static boolean kUseColorsForData = true;
     public final static int kDefaultMaxPacketsToPaintAsText = 500;
-    private final static int kInfoColor = Color.parseColor("#F21625");
 
     // Activity request codes (used for onActivityResult)
     private static final int kActivityRequestCode_ConnectedSettingsActivity = 0;
     private static final int kActivityRequestCode_MqttSettingsActivity = 1;
 
-    // Constants
-    private final static String kPreferences = "UartActivity_prefs";
-    private final static String kPreferences_eol = "eol";
-    private final static String kPreferences_eolCharactersId = "eolCharactersId";
-    private final static String kPreferences_echo = "echo";
-    private final static String kPreferences_asciiMode = "ascii";
-    private final static String kPreferences_timestampDisplayMode = "timestampdisplaymode";
-
-    // Colors
-    private int mTxColor;
-    private int mRxColor;
-
-    // UI
-    private EditText mBufferTextView;
-    private ListView mBufferListView;
-    private TimestampListAdapter mBufferListAdapter;
-    private TextView mSentBytesTextView;
-    private TextView mReceivedBytesTextView;
-
-    // UI TextBuffer (refreshing the text buffer is managed with a timer because a lot of changes can arrive really fast and could stall the main thread)
-    private Handler mUIRefreshTimerHandler = new Handler();
-    private Runnable mUIRefreshTimerRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (isUITimerRunning) {
-                updateTextDataUI();
-                // Log.d(TAG, "updateDataUI");
-                mUIRefreshTimerHandler.postDelayed(this, 200);
-            }
-        }
-    };
-    private boolean isUITimerRunning = false;
 
     // Data
     private boolean mShowDataInHexFormat;
-    private boolean mIsTimestampDisplayMode;
-    private boolean mIsEchoEnabled;
-    private boolean mIsEolEnabled;
-    private int mEolCharactersId;
 
     private volatile SpannableStringBuilder mTextSpanBuffer;
     private volatile ArrayList<UartDataChunk> mDataBuffer;
@@ -105,187 +68,64 @@ public class UartActivity extends UartInterfaceActivity  {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_uart);
+        setContentView(R.layout.connected_activ_layout);
+
+        setTitle("DJ Glovie");
 
         mBleManager = BleManager.getInstance(this);
         restoreRetainedDataFragment();
 
-        // Get default theme colors
-        TypedValue typedValue = new TypedValue();
-        Resources.Theme theme = getTheme();
-        theme.resolveAttribute(R.attr.colorPrimaryDark, typedValue, true);
-        mTxColor = typedValue.data;
-        theme.resolveAttribute(R.attr.colorControlActivated, typedValue, true);
-        mRxColor = typedValue.data;
-
-        // UI
-        mBufferListView = (ListView) findViewById(R.id.bufferListView);
-        mBufferListAdapter = new TimestampListAdapter(this, R.layout.layout_uart_datachunkitem);
-        mBufferListView.setAdapter(mBufferListAdapter);
-        mBufferListView.setDivider(null);
-
-        mBufferTextView = (EditText) findViewById(R.id.bufferTextView);
-        if (mBufferTextView != null) {
-            mBufferTextView.setKeyListener(null);     // make it not editable
-        }
-
-
-        mSentBytesTextView = (TextView) findViewById(R.id.sentBytesTextView);
-        mReceivedBytesTextView = (TextView) findViewById(R.id.receivedBytesTextView);
 
         // Read shared preferences
         maxPacketsToPaintAsText = PreferencesFragment.getUartTextMaxPackets(this);
-        //Log.d(TAG, "maxPacketsToPaintAsText: "+maxPacketsToPaintAsText);
 
-        // Read local preferences
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        mShowDataInHexFormat = !preferences.getBoolean(kPreferences_asciiMode, true);
-        final boolean isTimestampDisplayMode = preferences.getBoolean(kPreferences_timestampDisplayMode, false);
-        setDisplayFormatToTimestamp(isTimestampDisplayMode);
-        mIsEchoEnabled = preferences.getBoolean(kPreferences_echo, true);
-        mIsEolEnabled = preferences.getBoolean(kPreferences_eol, true);
-        mEolCharactersId = preferences.getInt(kPreferences_eolCharactersId, 0);
-        invalidateOptionsMenu();        // udpate options menu with current values
 
         // Continue
         onServicesDiscovered();
     }
 
+    public void disconnectClick (View view)
+    {
+        Intent stopIntent = new Intent(this, ForegroundService.class);
+        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+        startService(stopIntent);
+        this.finish();
+    }
+
+    public void helpClick (View view)   // help button pressed
+    {
+        Intent help_intent = new Intent(this,help_activ.class);
+        startActivity(help_intent);
+    }
+    public void aboutClick (View view)  // about button pressed
+    {
+        Intent about_intent = new Intent(this,about_activ.class);
+        startActivity(about_intent);
+    }
+
+    public void contactClick (View view)  // about button pressed
+    {
+        Intent contact_intent = new Intent(this,contact_activ.class);
+        startActivity(contact_intent);
+    }
+
+    @Override
+    public void onBackPressed() { }
+
+    public void onDestroy() {
+        super.onDestroy();
+        Intent stopIntent = new Intent(this, ForegroundService.class);
+        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+        startService(stopIntent);
+        saveRetainedDataFragment();
+    }
+
     @Override
     public void onResume() {
         super.onResume();
-
         // Setup listeners
         mBleManager.setBleListener(this);
 
-        // Start UI refresh
-        //Log.d(TAG, "add ui timer");
-        updateUI();
-
-        isUITimerRunning = true;
-        mUIRefreshTimerHandler.postDelayed(mUIRefreshTimerRunnable, 0);
-
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-
-        //Log.d(TAG, "remove ui timer");
-        isUITimerRunning = false;
-        mUIRefreshTimerHandler.removeCallbacksAndMessages(mUIRefreshTimerRunnable);
-
-        // Save preferences
-        SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean(kPreferences_echo, mIsEchoEnabled);
-        editor.putBoolean(kPreferences_eol, mIsEolEnabled);
-        editor.putInt(kPreferences_eolCharactersId, mEolCharactersId);
-        editor.putBoolean(kPreferences_asciiMode, !mShowDataInHexFormat);
-        editor.putBoolean(kPreferences_timestampDisplayMode, mIsTimestampDisplayMode);
-
-        editor.apply();
-    }
-
-    @Override
-    public void onDestroy() {
-        // Retain data
-        saveRetainedDataFragment();
-
-        super.onDestroy();
-    }
-
-
-    private int getEolCharactersStringId() {
-        switch (mEolCharactersId) {
-            case 1:
-                return R.string.uart_eolmode_r;
-            case 2:
-                return R.string.uart_eolmode_nr;
-            case 3:
-                return R.string.uart_eolmode_rn;
-            default:
-                return R.string.uart_eolmode_n;
-        }
-    }
-
-
-    private void setDisplayFormatToTimestamp(boolean enabled) {
-        mIsTimestampDisplayMode = enabled;
-        mBufferTextView.setVisibility(enabled ? View.GONE : View.VISIBLE);
-        mBufferListView.setVisibility(enabled ? View.VISIBLE : View.GONE);
-    }
-
-    // region Menu
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_uart, menu);
-
-
-        // DisplayMode
-        MenuItem displayModeMenuItem = menu.findItem(R.id.action_displaymode);
-        displayModeMenuItem.setTitle(String.format(getString(R.string.uart_action_displaymode_format), getString(mIsTimestampDisplayMode ? R.string.uart_displaymode_timestamp : R.string.uart_displaymode_text)));
-        SubMenu displayModeSubMenu = displayModeMenuItem.getSubMenu();
-        if (mIsTimestampDisplayMode) {
-            MenuItem displayModeTimestampMenuItem = displayModeSubMenu.findItem(R.id.action_displaymode_timestamp);
-            displayModeTimestampMenuItem.setChecked(true);
-        } else {
-            MenuItem displayModeTextMenuItem = displayModeSubMenu.findItem(R.id.action_displaymode_text);
-            displayModeTextMenuItem.setChecked(true);
-        }
-
-        // DataMode
-        MenuItem dataModeMenuItem = menu.findItem(R.id.action_datamode);
-        dataModeMenuItem.setTitle(String.format(getString(R.string.uart_action_datamode_format), getString(mShowDataInHexFormat ? R.string.uart_format_hexadecimal : R.string.uart_format_ascii)));
-        SubMenu dataModeSubMenu = dataModeMenuItem.getSubMenu();
-        if (mShowDataInHexFormat) {
-            MenuItem dataModeHexMenuItem = dataModeSubMenu.findItem(R.id.action_datamode_hex);
-            dataModeHexMenuItem.setChecked(true);
-        } else {
-            MenuItem dataModeAsciiMenuItem = dataModeSubMenu.findItem(R.id.action_datamode_ascii);
-            dataModeAsciiMenuItem.setChecked(true);
-        }
-
-        // Echo
-        MenuItem echoMenuItem = menu.findItem(R.id.action_echo);
-        echoMenuItem.setTitle(R.string.uart_action_echo);
-        echoMenuItem.setChecked(mIsEchoEnabled);
-
-        // Eol
-        MenuItem eolMenuItem = menu.findItem(R.id.action_eol);
-        eolMenuItem.setTitle(R.string.uart_action_eol);
-        eolMenuItem.setChecked(mIsEolEnabled);
-
-        // Eol Characters
-        MenuItem eolModeMenuItem = menu.findItem(R.id.action_eolmode);
-        eolModeMenuItem.setTitle(String.format(getString(R.string.uart_action_eolmode_format), getString(getEolCharactersStringId())));
-        SubMenu eolModeSubMenu = eolModeMenuItem.getSubMenu();
-        int selectedEolCharactersSubMenuId;
-        switch (mEolCharactersId) {
-            case 1:
-                selectedEolCharactersSubMenuId = R.id.action_eolmode_r;
-                break;
-            case 2:
-                selectedEolCharactersSubMenuId = R.id.action_eolmode_nr;
-                break;
-            case 3:
-                selectedEolCharactersSubMenuId = R.id.action_eolmode_rn;
-                break;
-            default:
-                selectedEolCharactersSubMenuId = R.id.action_eolmode_n;
-                break;
-        }
-        MenuItem selectedEolCharacterMenuItem = eolModeSubMenu.findItem(selectedEolCharactersSubMenuId);
-        selectedEolCharacterMenuItem.setChecked(true);
-
-        return true;
-    }
-
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        return super.onOptionsItemSelected(item);
     }
 
 
@@ -333,22 +173,6 @@ public class UartActivity extends UartInterfaceActivity  {
                 } else if (command.equals("previous")) {
                     previousSong();
                 }
-
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mIsTimestampDisplayMode) {
-                            final String currentDateTimeString = DateFormat.getTimeInstance().format(new Date(dataChunk.getTimestamp()));
-                            final String formattedData = mShowDataInHexFormat ? BleUtils.bytesToHex2(bytes) : BleUtils.bytesToText(bytes, true);
-
-                            mBufferListAdapter.add(new TimestampData("[" + currentDateTimeString + "] RX: " + formattedData, mRxColor));
-                            //mBufferListAdapter.add("[" + currentDateTimeString + "] RX: " + formattedData);
-                            //mBufferListView.smoothScrollToPosition(mBufferListAdapter.getCount() - 1);
-                            mBufferListView.setSelection(mBufferListAdapter.getCount());
-                        }
-                        updateUI();
-                    }
-                });
             }
         }
     }
@@ -365,39 +189,7 @@ public class UartActivity extends UartInterfaceActivity  {
         }
     }
 
-    private void updateUI() {
-        mReceivedBytesTextView.setText(String.format(getString(R.string.uart_receivedbytes_format), mReceivedBytes));
-    }
-
     private int mDataBufferLastSize = 0;
-
-    private void updateTextDataUI() {
-
-        if (!mIsTimestampDisplayMode) {
-            if (mDataBufferLastSize != mDataBuffer.size()) {
-
-                final int bufferSize = mDataBuffer.size();
-                if (bufferSize > maxPacketsToPaintAsText) {
-                    mDataBufferLastSize = bufferSize - maxPacketsToPaintAsText;
-                    mTextSpanBuffer.clear();
-                    addTextToSpanBuffer(mTextSpanBuffer, getString(R.string.uart_text_dataomitted) + "\n", kInfoColor);
-                }
-
-                // Log.d(TAG, "update packets: "+(bufferSize-mDataBufferLastSize));
-                for (int i = mDataBufferLastSize; i < bufferSize; i++) {
-                    final UartDataChunk dataChunk = mDataBuffer.get(i);
-                    final boolean isRX = dataChunk.getMode() == UartDataChunk.TRANSFERMODE_RX;
-                    final byte[] bytes = dataChunk.getData();
-                    final String formattedData = mShowDataInHexFormat ? BleUtils.bytesToHex2(bytes) : BleUtils.bytesToText(bytes, true);
-                    addTextToSpanBuffer(mTextSpanBuffer, formattedData, isRX ? mRxColor : mTxColor);
-                }
-
-                mDataBufferLastSize = mDataBuffer.size();
-                mBufferTextView.setText(mTextSpanBuffer);
-                mBufferTextView.setSelection(0, mTextSpanBuffer.length());        // to automatically scroll to the end
-            }
-        }
-    }
 
 
     // region DataFragment
@@ -445,41 +237,6 @@ public class UartActivity extends UartInterfaceActivity  {
         mRetainedDataFragment.mReceivedBytes = mReceivedBytes;
     }
     // endregion
-
-
-    // region TimestampAdapter
-    private class TimestampData {
-        String text;
-        int textColor;
-
-        TimestampData(String text, int textColor) {
-            this.text = text;
-            this.textColor = textColor;
-        }
-    }
-
-    private class TimestampListAdapter extends ArrayAdapter<TimestampData> {
-
-        TimestampListAdapter(Context context, int textViewResourceId) {
-            super(context, textViewResourceId);
-        }
-
-        @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
-            if (convertView == null) {
-                convertView = LayoutInflater.from(getContext()).inflate(R.layout.layout_uart_datachunkitem, parent, false);
-            }
-
-            TimestampData data = getItem(position);
-            TextView textView = (TextView) convertView;
-            textView.setText(data.text);
-            textView.setTextColor(data.textColor);
-
-            return convertView;
-        }
-    }
-    // endregion
-
 
 
     // spotify handling stuff

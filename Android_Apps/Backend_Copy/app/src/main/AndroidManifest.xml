@@ -47,31 +47,23 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".app.MainHelpActivity"
-            android:label="@string/title_activity_mainhelp"
-            android:parentActivityName=".app.MainActivity"
-            android:screenOrientation="fullUser">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.MainActivity" />
-        </activity>
-        <activity
-            android:name=".app.CommonHelpActivity"
-            android:screenOrientation="fullUser">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.MainActivity"
-              />
-        </activity>
-        <activity
             android:name=".app.UartActivity"
             android:label="@string/title_activity_uart"
             android:screenOrientation="fullUser"
             android:windowSoftInputMode="adjustResize">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.adafruit.bluefruit.le.connect.app.MainActivity" />
         </activity>
+
+        <activity
+            android:name=".app.about_activ"/>
+
+        <activity
+            android:name=".app.help_activ"/>
+
+        <activity
+            android:name=".app.connected_activ"/>
+
+        <activity
+            android:name=".app.contact_activ"/>
 
 
     </application>

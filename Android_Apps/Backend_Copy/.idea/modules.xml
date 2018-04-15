@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/Feather_Bluetooth_Comm.iml" filepath="$PROJECT_DIR$/Feather_Bluetooth_Comm.iml" />
+      <module fileurl="file://$PROJECT_DIR$/Backend_Copy.iml" filepath="$PROJECT_DIR$/Backend_Copy.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>
