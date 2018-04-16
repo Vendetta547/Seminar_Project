@@ -112,22 +112,24 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
 
-        if (mScannedDevices != null && mScannedDevices.size() != 0) {
+        if (mScannedDevices != null || mScannedDevices.size() != 0) {
             // array of all nearby bluetooth devices
             ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
 
 
             Log.d(TAG, "Stop scanning");
-            // Log.d(TAG, Integer.toString(filteredPeripherals.size()));
-            // Log.d(TAG, filteredPeripherals.get(0).getName());
+             Log.d(TAG, Integer.toString(filteredPeripherals.size()));
 
             // check if glove is powered on and ready to connect
             boolean gloveFound = false;
-            if (filteredPeripherals != null) {
+            if (filteredPeripherals.size() != 0) {
                 for (int i = 0; i < filteredPeripherals.size(); i++) {
-                    if (filteredPeripherals.get(i).getName().equals("Adafruit Bluefruit LE")) {
-                        mSelectedDeviceData = filteredPeripherals.get(i);
-                        gloveFound = true;
+                    if (filteredPeripherals.get(i).getName() != null) {
+                        if ((filteredPeripherals.get(i).getName()).equals("Adafruit Bluefruit LE")) {
+                            mSelectedDeviceData = filteredPeripherals.get(i);
+                            Log.d(TAG, (filteredPeripherals.get(i).getName()).toString());
+                            gloveFound = true;
+                        }
                     }
                 }
             }
@@ -140,12 +142,12 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 mComponentToStartWhenConnected = UartActivity.class;
                 connect(mSelectedDeviceData.device);
             } else {
-                mScannedDevices.clear();
+              //  mScannedDevices.clear();
                 startScan(null);
                 toast.show();
             }
         } else {
-            mScannedDevices.clear();
+           // mScannedDevices.clear();
             startScan(null);
             toast.show();
         }
