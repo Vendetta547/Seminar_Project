@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
+    /* handler for connect button in UI */
     public void connectClick (View view)    // connect button pressed
     {
         stopScanning();
@@ -112,24 +113,23 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
 
-        if (mScannedDevices != null || mScannedDevices.size() != 0) {
+        Log.d(TAG, Integer.toString((mScannedDevices.size())));
+        if (mScannedDevices != null && mScannedDevices.size() != 0) {
             // array of all nearby bluetooth devices
             ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
 
 
-            Log.d(TAG, "Stop scanning");
-             Log.d(TAG, Integer.toString(filteredPeripherals.size()));
+            Log.d(TAG, "mScannedDevices not null");
+             //Log.d(TAG, Integer.toString(filteredPeripherals.size()));
 
             // check if glove is powered on and ready to connect
             boolean gloveFound = false;
-            if (filteredPeripherals.size() != 0) {
-                for (int i = 0; i < filteredPeripherals.size(); i++) {
-                    if (filteredPeripherals.get(i).getName() != null) {
-                        if ((filteredPeripherals.get(i).getName()).equals("Adafruit Bluefruit LE")) {
-                            mSelectedDeviceData = filteredPeripherals.get(i);
-                            Log.d(TAG, (filteredPeripherals.get(i).getName()).toString());
-                            gloveFound = true;
-                        }
+            for (int i = 0; i < filteredPeripherals.size(); i++) {
+                if (filteredPeripherals.get(i).getName() != null) {
+                    if ((filteredPeripherals.get(i).getName()).equals("Adafruit Bluefruit LE")) {
+                        mSelectedDeviceData = filteredPeripherals.get(i);
+                        Log.d(TAG, (filteredPeripherals.get(i).getName()).toString());
+                        gloveFound = true;
                     }
                 }
             }
@@ -142,13 +142,15 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 mComponentToStartWhenConnected = UartActivity.class;
                 connect(mSelectedDeviceData.device);
             } else {
-              //  mScannedDevices.clear();
-                startScan(null);
+                Log.d(TAG, "Inner else");
+                //mScannedDevices.clear();
+                autostartScan();
                 toast.show();
             }
         } else {
-           // mScannedDevices.clear();
-            startScan(null);
+            Log.d(TAG, "outer else");
+            //mScannedDevices.clear();
+            autostartScan();
             toast.show();
         }
     }
@@ -481,11 +483,11 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     deviceData.scanRecord = scanRecord;
                     decodeScanRecords(deviceData);
 
-                    // Update device data
+                   /* // Update device data
                     long currentMillis = SystemClock.uptimeMillis();
                     if (previouslyScannedDeviceData == null || currentMillis - mLastUpdateMillis > kMinDelayToUpdateUI) {          // Avoid updating when not a new device has been found and the time from the last update is really short to avoid updating UI so fast that it will become unresponsive
                         mLastUpdateMillis = currentMillis;
-                    }
+                    }*/
 
                 }
             });

@@ -63,7 +63,6 @@ public class UartActivity extends UartInterfaceActivity  {
     private DataFragment mRetainedDataFragment;
 
 
-    private int maxPacketsToPaintAsText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,20 +74,15 @@ public class UartActivity extends UartInterfaceActivity  {
         mBleManager = BleManager.getInstance(this);
         restoreRetainedDataFragment();
 
-
-        // Read shared preferences
-        maxPacketsToPaintAsText = PreferencesFragment.getUartTextMaxPackets(this);
-
-
         // Continue
         onServicesDiscovered();
     }
 
     public void disconnectClick (View view)
     {
-        Intent stopIntent = new Intent(this, ForegroundService.class);
+        /*Intent stopIntent = new Intent(this, ForegroundService.class);
         stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
-        startService(stopIntent);
+        startService(stopIntent);*/
         this.finish();
     }
 
@@ -142,6 +136,9 @@ public class UartActivity extends UartInterfaceActivity  {
     @Override
     public void onDisconnected() {
         super.onDisconnected();
+        Intent stopIntent = new Intent(this, ForegroundService.class);
+        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
+        startService(stopIntent);
         Log.d(TAG, "Disconnected. Back to previous activity");
         finish();
     }
