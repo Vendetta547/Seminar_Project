@@ -25,10 +25,6 @@ public class UartActivity extends UartInterfaceActivity  {
     // Log
     private final static String TAG = UartActivity.class.getSimpleName();
 
-    // Configuration
-    private final static boolean kUseColorsForData = true;
-    public final static int kDefaultMaxPacketsToPaintAsText = 500;
-
     // Activity request codes (used for onActivityResult)
     private static final int kActivityRequestCode_ConnectedSettingsActivity = 0;
     private static final int kActivityRequestCode_MqttSettingsActivity = 1;
@@ -62,9 +58,6 @@ public class UartActivity extends UartInterfaceActivity  {
 
     public void disconnectClick (View view)
     {
-        /*Intent stopIntent = new Intent(this, ForegroundService.class);
-        stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
-        startService(stopIntent);*/
         this.finish();
     }
 
@@ -155,20 +148,6 @@ public class UartActivity extends UartInterfaceActivity  {
             }
         }
     }
-
-
-    private void addTextToSpanBuffer(SpannableStringBuilder spanBuffer, String text, int color) {
-
-        if (kUseColorsForData) {
-            final int from = spanBuffer.length();
-            spanBuffer.append(text);
-            spanBuffer.setSpan(new ForegroundColorSpan(color), from, from + text.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        } else {
-            spanBuffer.append(text);
-        }
-    }
-
-    private int mDataBufferLastSize = 0;
 
 
     // region DataFragment

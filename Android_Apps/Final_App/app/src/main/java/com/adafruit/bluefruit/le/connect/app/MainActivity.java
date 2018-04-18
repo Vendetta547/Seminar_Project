@@ -479,13 +479,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     deviceData.rssi = rssi;
                     deviceData.scanRecord = scanRecord;
                     decodeScanRecords(deviceData);
-
-                   /* // Update device data
-                    long currentMillis = SystemClock.uptimeMillis();
-                    if (previouslyScannedDeviceData == null || currentMillis - mLastUpdateMillis > kMinDelayToUpdateUI) {          // Avoid updating when not a new device has been found and the time from the last update is really short to avoid updating UI so fast that it will become unresponsive
-                        mLastUpdateMillis = currentMillis;
-                    }*/
-
                 }
             });
 
