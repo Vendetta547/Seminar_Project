@@ -50,17 +50,15 @@
             android:name=".app.UartActivity"
             android:label="@string/title_activity_uart"
             android:screenOrientation="fullUser"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleInstance"
+            />
 
         <activity
             android:name=".app.about_activ"/>
 
         <activity
             android:name=".app.help_activ"/>
-
-        <activity
-            android:name=".app.connected_activ"/>
 
         <activity
             android:name=".app.contact_activ"/>
