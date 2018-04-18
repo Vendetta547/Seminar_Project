@@ -34,9 +34,10 @@ public class ForegroundService extends Service {
                     R.mipmap.green_icon);
 
             Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle("DJ Glovi")
-                    .setContentText("Currently connected")
+                    .setContentTitle("DJ Glovie")
+                    .setContentText("Connected")
                     .setSmallIcon(R.mipmap.ic_launcher)
+                    .setPriority(Notification.PRIORITY_MIN)
                     .setLargeIcon(
                             Bitmap.createScaledBitmap(icon, 128, 128, false))
                     .setOngoing(true).build();

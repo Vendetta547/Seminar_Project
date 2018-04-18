@@ -65,7 +65,7 @@
         <activity
             android:name=".app.contact_activ"/>
 
-
+        <service android:name=".app.ForegroundService" />
     </application>
 
 </manifest>

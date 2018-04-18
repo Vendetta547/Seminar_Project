@@ -120,7 +120,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
             Log.d(TAG, "mScannedDevices not null");
-             //Log.d(TAG, Integer.toString(filteredPeripherals.size()));
 
             // check if glove is powered on and ready to connect
             boolean gloveFound = false;

@@ -13,23 +13,14 @@
 #define FACTORYRESET_ENABLE         1
 #define MINIMUM_FIRMWARE_VERSION    "0.6.6"
 #define MODE_LED_BEHAVIOUR          "MODE"
-/*=========================================================================*/
-
-// Create the bluefruit object, either software serial...uncomment these lines
-/* ...hardware SPI, using SCK/MOSI/MISO hardware SPI pins and then user selected CS/IRQ/RST */
-Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
-
-
-// A small helper
-void error(const __FlashStringHelper*err) {
-  Serial.println(err);
-  while (1);
-}
 
 #define PLAY_BUTTON 2
 #define NEXT_BUTTON 5
 #define BACK_BUTTON 12
 #define NUMBER_OF_BUTTONS 3
+/*=========================================================================*/
+/* create bluefruit object */ 
+Adafruit_BluefruitLE_SPI ble(BLUEFRUIT_SPI_CS, BLUEFRUIT_SPI_IRQ, BLUEFRUIT_SPI_RST);
 
 typedef struct {
   int current_state; 
@@ -58,25 +49,25 @@ Button back_button = {
 
 Button buttons[NUMBER_OF_BUTTONS] = {play_button, next_button, back_button}; 
 
+
+// A small helper
+void error(const __FlashStringHelper*err) {
+  Serial.println(err);
+  while (1);
+}
+
 void setup(void)
 {
   pinMode(buttons[0].input_pin, INPUT);
   pinMode(buttons[1].input_pin, INPUT);
   pinMode(buttons[2].input_pin, INPUT); 
-  //delay(500);
 
   Serial.begin(115200);
-  Serial.println(F("Adafruit Bluefruit Command Mode Example"));
-  Serial.println(F("---------------------------------------"));
-
-  /* Initialise the module */
-  Serial.print(F("Initialising the Bluefruit LE module: "));
 
   if ( !ble.begin(VERBOSE_MODE) )
   {
     error(F("Couldn't find Bluefruit, make sure it's in CoMmanD mode & check wiring?"));
   }
- //Serial.println( F("OK!") );
 
   if ( FACTORYRESET_ENABLE )
   {
@@ -89,14 +80,6 @@ void setup(void)
 
   /* Disable command echo from Bluefruit */
   ble.echo(false);
-
-  //Serial.println("Requesting Bluefruit info:");
-  /* Print Bluefruit information */
-  //ble.info();
-
- // Serial.println(F("Please use Adafruit Bluefruit LE app to connect in UART mode"));
- // Serial.println(F("Then Enter characters to send to Bluefruit"));
-//  Serial.println();
 
   ble.verbose(false);  // debug info is a little annoying after this point!
 
