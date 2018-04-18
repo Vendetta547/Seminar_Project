@@ -14,9 +14,9 @@
 #define MINIMUM_FIRMWARE_VERSION    "0.6.6"
 #define MODE_LED_BEHAVIOUR          "MODE"
 
-#define PLAY_BUTTON 2
-#define NEXT_BUTTON 5
-#define BACK_BUTTON 12
+#define PLAY_BUTTON 6
+#define NEXT_BUTTON 10
+#define BACK_BUTTON 3
 #define NUMBER_OF_BUTTONS 3
 /*=========================================================================*/
 /* create bluefruit object */ 
