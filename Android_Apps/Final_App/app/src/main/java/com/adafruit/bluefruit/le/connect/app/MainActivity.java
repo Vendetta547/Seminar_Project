@@ -42,7 +42,6 @@ import java.util.UUID;
 public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener {
     // Constants
     private final static String TAG = MainActivity.class.getSimpleName();
-    private final static long kMinDelayToUpdateUI = 200;    // in milliseconds
 
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
 
@@ -51,8 +50,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private static final int kActivityRequestCode_Settings = 2;
     private static final int kActivityRequestCode_ConnectedActivity = 3;
 
-    // UI
-    private long mLastUpdateMillis;
 
     private AlertDialog mConnectingDialog;
 
@@ -172,6 +169,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         startActivity(contact_intent);
     }
 
+    /* disable android hardware back button */
     @Override
     public void onBackPressed() { }
 
