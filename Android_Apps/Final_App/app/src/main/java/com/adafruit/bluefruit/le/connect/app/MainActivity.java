@@ -17,7 +17,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -30,7 +29,6 @@ import com.adafruit.bluefruit.le.connect.R;
 import com.adafruit.bluefruit.le.connect.ble.BleDevicesScanner;
 import com.adafruit.bluefruit.le.connect.ble.BleManager;
 import com.adafruit.bluefruit.le.connect.ble.BleUtils;
-import com.adafruit.bluefruit.le.connect.ui.utils.DialogUtils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,16 +38,15 @@ import java.util.Iterator;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener {
+
+
     // Constants
     private final static String TAG = MainActivity.class.getSimpleName();
-
     private static final int PERMISSION_REQUEST_FINE_LOCATION = 1;
 
     // Activity request codes (used for onActivityResult)
     private static final int kActivityRequestCode_EnableBluetooth = 1;
-    private static final int kActivityRequestCode_Settings = 2;
-    private static final int kActivityRequestCode_ConnectedActivity = 3;
-
+    private static final int kActivityRequestCode_ConnectedActivity = 2;
 
     private AlertDialog mConnectingDialog;
 
@@ -57,15 +54,11 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private BleManager mBleManager;
     private boolean mIsScanPaused = true;
     private BleDevicesScanner mScanner;
-    private PeripheralList mPeripheralList;
-
     private ArrayList<BluetoothDeviceData> mScannedDevices;
     private BluetoothDeviceData mSelectedDeviceData;
-    private Class<?> mComponentToStartWhenConnected;
-    private boolean mShouldEnableWifiOnQuit = false;
-    private String mLatestCheckedDeviceAddress;
 
-    private DataFragment mRetainedDataFragment;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,9 +67,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
         // Init variables
         mBleManager = BleManager.getInstance(this);
-        restoreRetainedDataFragment();
-        mPeripheralList = new PeripheralList();
-
 
         // Setup when activity is created for the first time
         if (savedInstanceState == null) {
@@ -99,91 +89,103 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
+
+
     /* handler for connect button in UI */
     public void connectClick (View view)    // connect button pressed
     {
         stopScanning();
 
-        // toast popup in case bad stuff happens
+        // toast popup in case an error occurs
+        /****************************************************/
         Context context = getApplicationContext();
         CharSequence text = "Glove not detected.";
         int duration = Toast.LENGTH_SHORT;
         Toast toast = Toast.makeText(context, text, duration);
+        /****************************************************/
 
-        Log.d(TAG, Integer.toString((mScannedDevices.size())));
-        if (mScannedDevices != null && mScannedDevices.size() != 0) {
-            // array of all nearby bluetooth devices
-            ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
+        if (BleUtils.getBleStatus(this) != BleUtils.STATUS_BLE_ENABLED) {
+            Toast no_bluetooth = Toast.makeText(context, "Bluetooth is not enabled", duration);
+            no_bluetooth.show();
+        } else {
+            if (mScannedDevices != null && mScannedDevices.size() != 0) {
+                // array of all nearby bluetooth devices
+               // ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
 
-
-            Log.d(TAG, "mScannedDevices not null");
-
-            // check if glove is powered on and ready to connect
-            boolean gloveFound = false;
-            for (int i = 0; i < filteredPeripherals.size(); i++) {
-                if (filteredPeripherals.get(i).getName() != null) {
-                    if ((filteredPeripherals.get(i).getName()).equals("Adafruit Bluefruit LE")) {
-                        mSelectedDeviceData = filteredPeripherals.get(i);
-                        Log.d(TAG, (filteredPeripherals.get(i).getName()).toString());
-                        gloveFound = true;
+                // check if glove is powered on and ready to connect
+                boolean gloveFound = false;
+                for (int i = 0; i < mScannedDevices.size(); i++) {
+                    if (mScannedDevices.get(i).advertisedName != null) { // sometimes items in the list would be null somehow, and it would cause connection issues; this fixed the connection issues
+                        if ((mScannedDevices.get(i).advertisedName).equals(Constants.GLOVE_NAME)) {
+                            mSelectedDeviceData = mScannedDevices.get(i);
+                            Log.d(TAG, "connected to " + (mScannedDevices.get(i).getName()).toString());
+                            gloveFound = true;
+                        }
                     }
                 }
-            }
-
-            if (gloveFound) {
-                Intent startIntent = new Intent(this, ForegroundService.class);
-                startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
-                startService(startIntent);
-                mBleManager.setBleListener(MainActivity.this);           // Force set listener (could be still checking for updates...)
-                mComponentToStartWhenConnected = UartActivity.class;
-                connect(mSelectedDeviceData.device);
+                // launch foreground notification and connect to device
+                if (gloveFound) {
+                    Intent startIntent = new Intent(this, ForegroundService.class);
+                    startIntent.setAction(Constants.ACTION.STARTFOREGROUND_ACTION);
+                    startService(startIntent);
+                    connect(mSelectedDeviceData.device);
+                } else {
+                    autostartScan();
+                    toast.show();
+                }
             } else {
-                Log.d(TAG, "Inner else");
-                //mScannedDevices.clear();
                 autostartScan();
                 toast.show();
             }
-        } else {
-            Log.d(TAG, "outer else");
-            //mScannedDevices.clear();
-            autostartScan();
-            toast.show();
         }
     }
 
-    public void helpClick (View view)   // help button pressed
+
+
+
+    public void helpClick (View view)
     {
         Intent help_intent = new Intent(this,help_activ.class);
         startActivity(help_intent);
     }
 
-    public void aboutClick (View view)  // about button pressed
+
+
+
+    public void aboutClick (View view)
     {
         Intent about_intent = new Intent(this,about_activ.class);
         startActivity(about_intent);
     }
 
-    public void contactClick (View view)  // about button pressed
+
+
+
+    public void contactClick (View view)
     {
         Intent contact_intent = new Intent(this,contact_activ.class);
         startActivity(contact_intent);
     }
+
+
+
 
     /* disable android hardware back button */
     @Override
     public void onBackPressed() { }
 
 
+
+
     @Override
     public void onResume() {
         super.onResume();
-
-        // Set listener
         mBleManager.setBleListener(this);
-
-        // Autostart scan
         autostartScan();
     }
+
+
+
 
     private void autostartScan() {
         if (BleUtils.getBleStatus(this) == BleUtils.STATUS_BLE_ENABLED) {
@@ -198,49 +200,52 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
+
+
+
     @Override
     public void onPause() {
         // Stop scanning
         if (mScanner != null && mScanner.isScanning()) {
             mIsScanPaused = true;
             stopScanning();
-            mScannedDevices.clear();
         }
 
         super.onPause();
     }
+
+
+
 
     public void onStop() {
         if (mConnectingDialog != null) {
             mConnectingDialog.cancel();
             mConnectingDialog = null;
         }
-
         super.onStop();
     }
+
+
 
 
     @Override
     protected void onDestroy() {
         // Stop ble adapter reset if in progress
         BleUtils.cancelBluetoothAdapterReset(this);
-
-        // Retain data
-        saveRetainedDataFragment();
-
         // Clean
         if (mConnectingDialog != null) {
             mConnectingDialog.cancel();
         }
-
         super.onDestroy();
     }
 
-    // region Permissions
+
+
+
+    /* requests permissions for location in order to scan for bluetooth peripherals */
     @TargetApi(Build.VERSION_CODES.M)
     private void requestLocationPermissionIfNeeded() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // Android M Permission check 
             if (this.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 final AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle("This app needs location access");
@@ -256,13 +261,15 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
+
+
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case PERMISSION_REQUEST_FINE_LOCATION: {
                 if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     Log.d(TAG, "Location permission granted");
-                    // Autostart scan
                     autostartScan();
                 } else {
                     final AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -285,7 +292,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         }
     }
 
-    // endregion
 
 
 
@@ -297,6 +303,12 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
+
+    /* checks the status of bluetooth on the phone
+     * is it supported?
+     * does the user have it disabled?
+     *           if the user has it disabled, ask them to enable it
+     */
     private boolean manageBluetoothAvailability() {
         boolean isEnabled = true;
 
@@ -327,11 +339,13 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             AlertDialog dialog = builder.setMessage(errorMessageId)
                     .setPositiveButton(android.R.string.ok, null)
                     .show();
-            DialogUtils.keepDialogOnOrientationChanges(dialog);
         }
 
         return isEnabled;
     }
+
+
+
 
     private boolean manageLocationServiceAvailabilityForScanning() {
 
@@ -353,24 +367,26 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 AlertDialog dialog = builder.setMessage(R.string.dialog_error_nolocationservices_requiredforscan_marshmallow)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
-                DialogUtils.keepDialogOnOrientationChanges(dialog);
             }
         }
 
         return areLocationServiceReady;
     }
 
+
+
+
+    /* initiates bluetooth uart connection and redirects to the activity that will handle the incoming data */
     private void connect(BluetoothDevice device) {
         boolean isConnecting = mBleManager.connect(this, device.getAddress());
         if (isConnecting) {
             showConnectionStatus(true);
-            if (mComponentToStartWhenConnected != null) {
-                Log.d(TAG, "Start component:" + mComponentToStartWhenConnected);
-                Intent intent = new Intent(MainActivity.this, mComponentToStartWhenConnected);
-                startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
-            }
+            Intent intent = new Intent(MainActivity.this, UartActivity.class);
+            startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
         }
     }
+
+
 
 
     @Override
@@ -390,14 +406,12 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                 AlertDialog dialog = builder.setMessage(R.string.dialog_error_no_bluetooth)
                         .setPositiveButton(android.R.string.ok, null)
                         .show();
-                DialogUtils.keepDialogOnOrientationChanges(dialog);
-
             }
-        } else if (requestCode == kActivityRequestCode_Settings) {
-            // Return from activity settings. Update app behaviour if needed
-
         }
     }
+
+
+
 
     private void showConnectionStatus(boolean enable) {
         showStatusDialog(enable, R.string.scan_connecting);
@@ -405,21 +419,19 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
+    /* creates an alert dialog and displays it on the screen */
     private void showStatusDialog(boolean show, int stringId) {
         if (show) {
-
             // Remove if a previous dialog was open (maybe because was clicked 2 times really quick)
             if (mConnectingDialog != null) {
                 mConnectingDialog.cancel();
             }
-
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setMessage(stringId);
 
             // Show dialog
             mConnectingDialog = builder.create();
             mConnectingDialog.setCanceledOnTouchOutside(false);
-
             mConnectingDialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
                 @Override
                 public boolean onKey(DialogInterface arg0, int keyCode, KeyEvent event) {
@@ -439,7 +451,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     }
 
 
-    // region Scan
+
+
     private void startScan(final UUID[] servicesToScan) {
         Log.d(TAG, "startScan");
 
@@ -481,12 +494,14 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     decodeScanRecords(deviceData);
                 }
             });
-
             // Start scanning
             mScanner.start();
         }
 
     }
+
+
+
 
     private void stopScanning() {
         // Stop scanning
@@ -495,8 +510,10 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             mScanner = null;
         }
     }
-    // endregion
 
+
+
+    /* nasty protocol level decoding; this is where we really thank the open source community for their hard work */
     private void decodeScanRecords(BluetoothDeviceData deviceData) {
         // based on http://stackoverflow.com/questions/24003777/read-advertisement-packet-in-android
         final byte[] scanRecord = deviceData.scanRecord;
@@ -626,23 +643,15 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
-    // region ResetBluetoothAdapterListener
+
     @Override
     public void resetBluetoothCompleted() {
         Log.d(TAG, "Reset completed -> Resume scanning");
         resumeScanning();
     }
-    // endregion
 
 
-    // region BleManagerListener
-    @Override
-    public void onConnected() {
-    }
 
-    @Override
-    public void onConnecting() {
-    }
 
     @Override
     public void onDisconnected() {
@@ -650,26 +659,9 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         showConnectionStatus(false);
     }
 
-    @Override
-    public void onServicesDiscovered() {}
 
 
-    @Override
-    public void onDataAvailable(BluetoothGattCharacteristic characteristic) {
-    }
 
-    @Override
-    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
-    }
-
-    @Override
-    public void onReadRemoteRssi(int rssi) {
-
-    }
-    // endregion
-
-
-    // region Helpers
     private class BluetoothDeviceData {
         BluetoothDevice device;
         public int rssi;
@@ -695,7 +687,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     cachedName = advertisedName;      // Try to get a name (but it seems that if device.getName() is null, this is also null)
                 }
             }
-
             return cachedName;
         }
 
@@ -706,170 +697,49 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     cachedNiceName = device.getAddress();
                 }
             }
-
             return cachedNiceName;
         }
     }
-    //endregion
-
-    // region Peripheral List
-    private class PeripheralList {
-        // Constants
-        private final static int kMaxRssiValue = -100;
-
-        private final static String kPreferences = "PeripheralList_prefs";
-        private final static String kPreferences_filtersName = "filtersName";
-        private final static String kPreferences_filtersIsNameExact = "filtersIsNameExact";
-        private final static String kPreferences_filtersIsNameCaseInsensitive = "filtersIsNameCaseInsensitive";
-        private final static String kPreferences_filtersRssi = "filtersRssi";
-        private final static String kPreferences_filtersUnnamedEnabled = "filtersUnnamedEnabled";
-        private final static String kPreferences_filtersUartEnabled = "filtersUartEnabled";
-
-        // Data
-        private String mFilterName;
-        private boolean mIsFilterNameExact;
-        private boolean mIsFilterNameCaseInsensitive;
-        private int mRssiFilterValue;
-        private boolean mIsUnnamedEnabled;
-        private boolean mIsOnlyUartEnabled;
-        private ArrayList<BluetoothDeviceData> mCachedFilteredPeripheralList;
-        private boolean mIsFilterDirty;
-
-        PeripheralList() {
-            mIsFilterDirty = true;
-            mCachedFilteredPeripheralList = new ArrayList<>();
-
-            SharedPreferences preferences = getSharedPreferences(kPreferences, MODE_PRIVATE);
-            mFilterName = preferences.getString(kPreferences_filtersName, null);
-            mIsFilterNameExact = preferences.getBoolean(kPreferences_filtersIsNameExact, false);
-            mIsFilterNameCaseInsensitive = preferences.getBoolean(kPreferences_filtersIsNameCaseInsensitive, true);
-            mRssiFilterValue = preferences.getInt(kPreferences_filtersRssi, kMaxRssiValue);
-            mIsUnnamedEnabled = preferences.getBoolean(kPreferences_filtersUnnamedEnabled, true);
-            mIsOnlyUartEnabled = preferences.getBoolean(kPreferences_filtersUartEnabled, false);
-        }
 
 
-        ArrayList<BluetoothDeviceData> filteredPeripherals(boolean forceUpdate) {
-            if (mIsFilterDirty || forceUpdate) {
-                mCachedFilteredPeripheralList = calculateFilteredPeripherals();
-                mIsFilterDirty = false;
-            }
 
-            return mCachedFilteredPeripheralList;
-        }
 
-        private ArrayList<BluetoothDeviceData> calculateFilteredPeripherals() {
+    @Override
+    public void onServicesDiscovered() {}
 
-            ArrayList<BluetoothDeviceData> peripherals = (ArrayList<BluetoothDeviceData>) mScannedDevices.clone();
 
-            // Sort devices alphabetically
-            Collections.sort(peripherals, new Comparator<BluetoothDeviceData>() {
-                @Override
-                public int compare(BluetoothDeviceData o1, BluetoothDeviceData o2) {
-                    return o1.getNiceName().compareToIgnoreCase(o2.getNiceName());
-                }
-            });
 
-            // Apply filters
-            if (mIsOnlyUartEnabled) {
-                for (Iterator<BluetoothDeviceData> it = peripherals.iterator(); it.hasNext(); ) {
-                    if (it.next().type != BluetoothDeviceData.kType_Uart) {
-                        it.remove();
-                    }
-                }
-            }
 
-            if (!mIsUnnamedEnabled) {
-                for (Iterator<BluetoothDeviceData> it = peripherals.iterator(); it.hasNext(); ) {
-                    if (it.next().getName() == null) {
-                        it.remove();
-                    }
-                }
-            }
+    @Override
+    public void onDataAvailable(BluetoothGattCharacteristic characteristic) {}
 
-            if (mFilterName != null && !mFilterName.isEmpty()) {
-                for (Iterator<BluetoothDeviceData> it = peripherals.iterator(); it.hasNext(); ) {
-                    String name = it.next().getName();
-                    boolean testPassed = false;
-                    if (name != null) {
-                        if (mIsFilterNameExact) {
-                            if (mIsFilterNameCaseInsensitive) {
-                                testPassed = name.compareToIgnoreCase(mFilterName) == 0;
-                            } else {
-                                testPassed = name.compareTo(mFilterName) == 0;
-                            }
-                        } else {
-                            if (mIsFilterNameCaseInsensitive) {
-                                testPassed = name.toLowerCase().contains(mFilterName.toLowerCase());
-                            } else {
-                                testPassed = name.contains(mFilterName);
-                            }
-                        }
-                    }
-                    if (!testPassed) {
-                        it.remove();
-                    }
-                }
-            }
 
-            for (Iterator<BluetoothDeviceData> it = peripherals.iterator(); it.hasNext(); ) {
-                if (it.next().rssi < mRssiFilterValue) {
-                    it.remove();
-                }
-            }
 
-            return peripherals;
-        }
+
+    @Override
+    public void onDataAvailable(BluetoothGattDescriptor descriptor) {}
+
+
+
+
+    @Override
+    public void onReadRemoteRssi(int rssi) {}
+
+
+
+
+    @Override
+    public void onConnected() {
     }
 
-    // endregion
 
 
-    // region DataFragment
-    public static class DataFragment extends Fragment {
-        private ArrayList<BluetoothDeviceData> mScannedDevices;
-        private Class<?> mComponentToStartWhenConnected;
-        private boolean mShouldEnableWifiOnQuit;
-        private String mLatestCheckedDeviceAddress;
-        private BluetoothDeviceData mSelectedDeviceData;
 
-        @Override
-        public void onCreate(Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-            setRetainInstance(true);
-        }
-
+    @Override
+    public void onConnecting() {
     }
 
-    private void restoreRetainedDataFragment() {
-        // find the retained fragment
-        FragmentManager fm = getFragmentManager();
-        mRetainedDataFragment = (DataFragment) fm.findFragmentByTag(TAG);
 
-        if (mRetainedDataFragment == null) {
-            // Create
-            mRetainedDataFragment = new DataFragment();
-            fm.beginTransaction().add(mRetainedDataFragment, TAG).commitAllowingStateLoss();        // http://stackoverflow.com/questions/7575921/illegalstateexception-can-not-perform-this-action-after-onsaveinstancestate-h
 
-            mScannedDevices = new ArrayList<>();
 
-        } else {
-            // Restore status
-            mScannedDevices = mRetainedDataFragment.mScannedDevices;
-            mComponentToStartWhenConnected = mRetainedDataFragment.mComponentToStartWhenConnected;
-            mShouldEnableWifiOnQuit = mRetainedDataFragment.mShouldEnableWifiOnQuit;
-            mLatestCheckedDeviceAddress = mRetainedDataFragment.mLatestCheckedDeviceAddress;
-            mSelectedDeviceData = mRetainedDataFragment.mSelectedDeviceData;
-
-        }
-    }
-
-    private void saveRetainedDataFragment() {
-        mRetainedDataFragment.mScannedDevices = mScannedDevices;
-        mRetainedDataFragment.mComponentToStartWhenConnected = mComponentToStartWhenConnected;
-        mRetainedDataFragment.mShouldEnableWifiOnQuit = mShouldEnableWifiOnQuit;
-        mRetainedDataFragment.mLatestCheckedDeviceAddress = mLatestCheckedDeviceAddress;
-        mRetainedDataFragment.mSelectedDeviceData = mSelectedDeviceData;
-    }
-    // endregion
 }

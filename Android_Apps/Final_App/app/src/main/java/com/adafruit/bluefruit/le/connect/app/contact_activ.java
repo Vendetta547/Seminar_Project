@@ -15,6 +15,9 @@ import java.util.regex.Pattern;
 
 public class contact_activ extends AppCompatActivity {
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -33,6 +36,7 @@ public class contact_activ extends AppCompatActivity {
 
         // submit button
         Button email = (Button) findViewById(R.id.post_message);
+
         // things to do when the submit button is clicked
         email.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,6 +48,8 @@ public class contact_activ extends AppCompatActivity {
                 String subject   = your_subject.getText().toString();
                 String message   = your_message.getText().toString();
 
+                // ensure each field has user input
+                /**********************************************************************************/
                 if (name.matches("")){
                     your_name.setError("Name cannot be empty");
                     your_name.requestFocus();
@@ -67,39 +73,46 @@ public class contact_activ extends AppCompatActivity {
                     your_message.requestFocus();
                     return;
                 }
+                /**********************************************************************************/
 
                 // create intent to send email and fill it with necessary data
                 Intent sendEmail = new Intent(Intent.ACTION_SEND)
                     .setType("plain/text")
-                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"dtm7c@uvawise.edu", "led7t@uvawise.edu"})
+                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"dtm7c@uvawise.edu", "led7t@uvawise.edu", "mcs2hw@uvawise.edu"})
                     .putExtra(Intent.EXTRA_SUBJECT, subject)
                     .putExtra(Intent.EXTRA_TEXT, message);
 
                 // open activity chooser
                 startActivity(Intent.createChooser(sendEmail, "Send Email to Developers"));
             }
-        });
+        }); // end email.setOnClickListener
     }
 
-    @Override
-    public void onResume() {super.onResume();}
 
-    @Override
-    protected void onStart() {super.onStart();}
 
-    @Override
-    protected void onStop() {super.onStop();}
 
-    // validating email id
+    /* compares user supplied email against regular expression to ensure it follows an email address format
+     *
+     * Resource referenced for regular expression: https://howtodoinjava.com/regex/java-regex-validate-email-address/
+     *
+     * Regular expressions tested against test cases here: https://www.freeformatter.com/java-regex-tester.html#ad-output
+     *
+     * Use cases from this source were included in our tests: https://www.mkyong.com/regular-expressions/how-to-validate-email-address-with-regular-expression/
+     */
     private boolean isValidEmail(String email) {
         String EMAIL_PATTERN = "^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
                 + "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
 
+        // check that regular expression is valid and then match against input
         Pattern pattern = Pattern.compile(EMAIL_PATTERN);
         Matcher matcher = pattern.matcher(email);
         return matcher.matches();
     }
 
+
+
+
+    /* makes the back arrow in the action bar behave the same as the android hardware back button */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -110,4 +123,8 @@ public class contact_activ extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-}
+
+
+
+
+} // end class contact_activ
