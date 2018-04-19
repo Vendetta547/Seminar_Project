@@ -29,7 +29,6 @@ public class UartActivity extends UartInterfaceActivity  {
     private boolean mShowDataInHexFormat;
     private volatile SpannableStringBuilder mTextSpanBuffer;
     private volatile ArrayList<UartDataChunk> mDataBuffer;
-    private volatile int mSentBytes;
     private volatile int mReceivedBytes;
     private DataFragment mRetainedDataFragment;
 
@@ -43,7 +42,6 @@ public class UartActivity extends UartInterfaceActivity  {
 
         mBleManager = BleManager.getInstance(this);
         restoreRetainedDataFragment();
-        // Continue
         onServicesDiscovered();
     }
 
@@ -66,7 +64,7 @@ public class UartActivity extends UartInterfaceActivity  {
 
 
 
-    public void helpClick (View view)   // help button pressed
+    public void helpClick (View view)
     {
         Intent help_intent = new Intent(this,help_activ.class);
         startActivity(help_intent);
@@ -75,7 +73,7 @@ public class UartActivity extends UartInterfaceActivity  {
 
 
 
-    public void aboutClick (View view)  // about button pressed
+    public void aboutClick (View view)
     {
         Intent about_intent = new Intent(this,about_activ.class);
         startActivity(about_intent);
@@ -84,7 +82,7 @@ public class UartActivity extends UartInterfaceActivity  {
 
 
 
-    public void contactClick (View view)  // about button pressed
+    public void contactClick (View view)
     {
         Intent contact_intent = new Intent(this,contact_activ.class);
         startActivity(contact_intent);
@@ -92,7 +90,7 @@ public class UartActivity extends UartInterfaceActivity  {
 
 
 
-
+    /* disable hardware back button on android phone */
     @Override
     public void onBackPressed() { }
 
@@ -154,7 +152,6 @@ public class UartActivity extends UartInterfaceActivity  {
         private boolean mShowDataInHexFormat;
         private SpannableStringBuilder mTextSpanBuffer;
         private ArrayList<UartDataChunk> mDataBuffer;
-        private int mSentBytes;
         private int mReceivedBytes;
 
         @Override
@@ -184,7 +181,6 @@ public class UartActivity extends UartInterfaceActivity  {
             mShowDataInHexFormat = mRetainedDataFragment.mShowDataInHexFormat;
             mTextSpanBuffer = mRetainedDataFragment.mTextSpanBuffer;
             mDataBuffer = mRetainedDataFragment.mDataBuffer;
-            mSentBytes = mRetainedDataFragment.mSentBytes;
             mReceivedBytes = mRetainedDataFragment.mReceivedBytes;
         }
     }
@@ -196,7 +192,6 @@ public class UartActivity extends UartInterfaceActivity  {
         mRetainedDataFragment.mShowDataInHexFormat = mShowDataInHexFormat;
         mRetainedDataFragment.mTextSpanBuffer = mTextSpanBuffer;
         mRetainedDataFragment.mDataBuffer = mDataBuffer;
-        mRetainedDataFragment.mSentBytes = mSentBytes;
         mRetainedDataFragment.mReceivedBytes = mReceivedBytes;
     }
 

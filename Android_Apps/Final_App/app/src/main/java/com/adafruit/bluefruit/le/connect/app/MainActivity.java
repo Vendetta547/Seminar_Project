@@ -262,7 +262,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
-
+    /* checks the result of asking for location permissions */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
@@ -393,7 +393,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
-
+    /* begins scanning nearby bluetooth devices and appending them to mScannedDevices */
     private void startScan(final UUID[] servicesToScan) {
         Log.d(TAG, "startScan");
 
@@ -406,6 +406,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
             Log.w(TAG, "startScan: BluetoothAdapter not initialized or unspecified address.");
         } else {
             mScanner = new BleDevicesScanner(bluetoothAdapter, servicesToScan, new BluetoothAdapter.LeScanCallback() {
+                /* override for handler that gets called when scanner finds a device */
                 @Override
                 public void onLeScan(final BluetoothDevice device, final int rssi, byte[] scanRecord) {
                     BluetoothDeviceData previouslyScannedDeviceData = null;
@@ -601,12 +602,12 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
-
+    /* contains all relevant information for nearby bluetooth devices */
     private class BluetoothDeviceData {
         BluetoothDevice device;
         public int rssi;
         byte[] scanRecord;
-        private String advertisedName;           // Advertised name
+        private String advertisedName;              /* most important attribute for DJ Glovie; used to locate glove amongst many devices */
         private String cachedNiceName;
         private String cachedName;
 
