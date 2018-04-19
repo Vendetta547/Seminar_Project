@@ -143,8 +143,8 @@ String message = "";
   if ( getUserInput(inputs, BUFSIZE) )
   {
     // Send characters to Bluefruit
-    Serial.print("[Send] ");
-    Serial.println(inputs);
+   // Serial.print("[Send] ");
+   // Serial.println(inputs);
 
     ble.print("AT+BLEUARTTX=");
     ble.println(inputs);

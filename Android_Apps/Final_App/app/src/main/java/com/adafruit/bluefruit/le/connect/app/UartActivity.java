@@ -24,7 +24,6 @@ public class UartActivity extends UartInterfaceActivity  {
 
     // Activity request codes (used for onActivityResult)
     private static final int kActivityRequestCode_ConnectedSettingsActivity = 0;
-    private static final int kActivityRequestCode_MqttSettingsActivity = 1;
 
     // Data
     private boolean mShowDataInHexFormat;
@@ -57,6 +56,11 @@ public class UartActivity extends UartInterfaceActivity  {
         stopIntent.setAction(Constants.ACTION.STOPFOREGROUND_ACTION);
         startService(stopIntent);
         this.finish();
+        try {
+            Thread.sleep(100);
+        } catch(InterruptedException e) {
+
+        }
     }
 
 
@@ -120,8 +124,6 @@ public class UartActivity extends UartInterfaceActivity  {
     protected void onActivityResult(final int requestCode, final int resultCode, final Intent intent) {
         if (requestCode == kActivityRequestCode_ConnectedSettingsActivity && resultCode == RESULT_OK) {
             finish();
-        } else if (requestCode == kActivityRequestCode_MqttSettingsActivity && resultCode == RESULT_OK) {
-
         }
     }
 

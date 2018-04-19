@@ -4,8 +4,6 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Fragment;
-import android.app.FragmentManager;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -24,6 +22,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
+import android.widget.Button;
 import android.widget.Toast;
 import com.adafruit.bluefruit.le.connect.R;
 import com.adafruit.bluefruit.le.connect.ble.BleDevicesScanner;
@@ -32,9 +31,6 @@ import com.adafruit.bluefruit.le.connect.ble.BleUtils;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Iterator;
 import java.util.UUID;
 
 public class MainActivity extends AppCompatActivity implements BleManager.BleManagerListener, BleUtils.ResetBluetoothAdapterListener {
@@ -96,22 +92,21 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     {
         stopScanning();
 
-        // toast popup in case an error occurs
+        // toast popup boilerplate in case an error occurs
         /****************************************************/
         Context context = getApplicationContext();
-        CharSequence text = "Glove not detected.";
+        CharSequence text;
         int duration = Toast.LENGTH_SHORT;
-        Toast toast = Toast.makeText(context, text, duration);
         /****************************************************/
 
+        // is bluetooth turned on?
         if (BleUtils.getBleStatus(this) != BleUtils.STATUS_BLE_ENABLED) {
-            Toast no_bluetooth = Toast.makeText(context, "Bluetooth is not enabled", duration);
-            no_bluetooth.show();
+            text = "Bluetooth is not enabled";
+            Toast toast = Toast.makeText(context, text, duration);
+            toast.show();
         } else {
+            // consult our list of nearby devices that gathered through scanning
             if (mScannedDevices != null && mScannedDevices.size() != 0) {
-                // array of all nearby bluetooth devices
-               // ArrayList<BluetoothDeviceData> filteredPeripherals = mPeripheralList.filteredPeripherals(false);
-
                 // check if glove is powered on and ready to connect
                 boolean gloveFound = false;
                 for (int i = 0; i < mScannedDevices.size(); i++) {
@@ -131,10 +126,14 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     connect(mSelectedDeviceData.device);
                 } else {
                     autostartScan();
+                    text = "Glove not detected";
+                    Toast toast = Toast.makeText(context, text, duration);
                     toast.show();
                 }
             } else {
                 autostartScan();
+                text = "Glove not detected";
+                Toast toast = Toast.makeText(context, text, duration);
                 toast.show();
             }
         }
@@ -304,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
+
     /* checks the status of bluetooth on the phone
      * is it supported?
      * does the user have it disabled?
@@ -380,72 +380,13 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     private void connect(BluetoothDevice device) {
         boolean isConnecting = mBleManager.connect(this, device.getAddress());
         if (isConnecting) {
-            showConnectionStatus(true);
+           // showConnectionStatus(true);
             Intent intent = new Intent(MainActivity.this, UartActivity.class);
             startActivityForResult(intent, kActivityRequestCode_ConnectedActivity);
-        }
-    }
+            try {
+                Thread.sleep(100);
+            } catch(InterruptedException e) {
 
-
-
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        if (requestCode == kActivityRequestCode_ConnectedActivity) {
-            if (resultCode < 0) {
-                Toast.makeText(this, R.string.scan_unexpecteddisconnect, Toast.LENGTH_LONG).show();
-            }
-        } else if (requestCode == kActivityRequestCode_EnableBluetooth) {
-            if (resultCode == Activity.RESULT_OK) {
-                // Bluetooth was enabled, resume scanning
-                resumeScanning();
-            } else if (resultCode == Activity.RESULT_CANCELED) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                AlertDialog dialog = builder.setMessage(R.string.dialog_error_no_bluetooth)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-            }
-        }
-    }
-
-
-
-
-    private void showConnectionStatus(boolean enable) {
-        showStatusDialog(enable, R.string.scan_connecting);
-    }
-
-
-
-    /* creates an alert dialog and displays it on the screen */
-    private void showStatusDialog(boolean show, int stringId) {
-        if (show) {
-            // Remove if a previous dialog was open (maybe because was clicked 2 times really quick)
-            if (mConnectingDialog != null) {
-                mConnectingDialog.cancel();
-            }
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setMessage(stringId);
-
-            // Show dialog
-            mConnectingDialog = builder.create();
-            mConnectingDialog.setCanceledOnTouchOutside(false);
-            mConnectingDialog.setOnKeyListener(new DialogInterface.OnKeyListener() {
-                @Override
-                public boolean onKey(DialogInterface arg0, int keyCode, KeyEvent event) {
-                    if (keyCode == KeyEvent.KEYCODE_BACK) {
-                        mBleManager.disconnect();
-                        mConnectingDialog.cancel();
-                    }
-                    return true;
-                }
-            });
-            mConnectingDialog.show();
-        } else {
-            if (mConnectingDialog != null) {
-                mConnectingDialog.cancel();
             }
         }
     }
@@ -656,7 +597,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
     @Override
     public void onDisconnected() {
         Log.d(TAG, "MainActivity onDisconnected");
-        showConnectionStatus(false);
     }
 
 
