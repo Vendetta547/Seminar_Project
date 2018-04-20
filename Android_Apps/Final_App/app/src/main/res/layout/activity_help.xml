@@ -11,8 +11,19 @@
 
 
     <VideoView
+        android:id="@+id/video_view"
         android:layout_width="match_parent"
         android:layout_height="271dp" />
+    <Button
+        android:id="@+id/video_play_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_centerHorizontal="true"
+        android:background="@android:color/transparent"
+
+
+        />
 
     <TextView
         android:layout_width="match_parent"
@@ -25,7 +36,7 @@
         android:layout_width="146dp"
         android:layout_height="wrap_content"
         android:background="@drawable/button_background_other"
-        android:onClick="contactClick"
+        android:onClick="videoPlay"
         android:text="CONTACT US"
         tools:ignore="OnClick"
         tools:layout_editor_absoluteX="33dp"
