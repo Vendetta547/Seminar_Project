@@ -35,12 +35,8 @@ const int play_button3 = 11;
 void setup(void)
 {
   pinMode(play_button, INPUT);
-  //while (!Serial);  // required for Flora & Micro
-  delay(500);
 
   Serial.begin(115200);
-  Serial.println(F("Adafruit Bluefruit Command Mode Example"));
-  Serial.println(F("---------------------------------------"));
 
   /* Initialise the module */
   Serial.print(F("Initialising the Bluefruit LE module: "));
@@ -81,11 +77,8 @@ void setup(void)
   }
 }
 
-/**************************************************************************/
-/*!
-    @brief  Constantly poll for new command or response data
-*/
-/**************************************************************************/
+
+
 int buttonState = 0; 
 int lastButtonState = 0;
 int buttonState2 = 0;
