@@ -10,18 +10,8 @@
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Needed to download files from dropbox -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-
-    <!-- Barcode reading -->
-    <uses-permission android:name="android.permission.CAMERA" />
-
-    <!-- Wifi permissions are only needed if the app needs to turn off wifi to improve ble connections -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
 
     <application
         android:allowBackup="true"
@@ -33,13 +23,10 @@
             android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version" />
 
-        <!-- Mqtt Service -->
-        <service android:name="org.eclipse.paho.android.service.MqttService" />
-
         <activity
             android:name=".app.MainActivity"
             android:label="@string/app_name"
-            android:screenOrientation="fullUser">
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -49,23 +36,24 @@
         <activity
             android:name=".app.UartActivity"
             android:label="@string/title_activity_uart"
-            android:screenOrientation="fullUser"
-            android:windowSoftInputMode="adjustResize">
-        </activity>
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize"
+            android:launchMode="singleInstance"
+            />
 
         <activity
-            android:name=".app.about_activ"/>
+            android:name=".app.about_activ"
+            android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".app.help_activ"/>
+            android:name=".app.help_activ"
+            android:screenOrientation="portrait"/>
 
         <activity
-            android:name=".app.connected_activ"/>
+            android:name=".app.contact_activ"
+            android:screenOrientation="portrait"/>
 
-        <activity
-            android:name=".app.contact_activ"/>
-
-
+        <service android:name=".app.ForegroundService" />
     </application>
 
 </manifest>

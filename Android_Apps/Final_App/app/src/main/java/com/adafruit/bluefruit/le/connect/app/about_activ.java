@@ -10,6 +10,9 @@ import com.adafruit.bluefruit.le.connect.R;
 
 public class about_activ extends AppCompatActivity {
 
+
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -18,6 +21,7 @@ public class about_activ extends AppCompatActivity {
         setTitle("About");
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
+        // display page in a webview format
         WebView infoWebView = (WebView) findViewById(R.id.infoWebView);
         if (infoWebView != null) {
             infoWebView.setBackgroundColor(Color.TRANSPARENT);
@@ -25,6 +29,10 @@ public class about_activ extends AppCompatActivity {
         }
     }
 
+
+
+
+    /* makes the back arrow in the action bar behave the same as the android hardware back button */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -35,4 +43,8 @@ public class about_activ extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
     }
-}
+
+
+
+
+} // end class about_activ

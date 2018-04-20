@@ -1,6 +1,7 @@
 package com.adafruit.bluefruit.le.connect.app;
 
 import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -12,35 +13,47 @@ import android.util.Log;
 import com.adafruit.bluefruit.le.connect.R;
 
 public class ForegroundService extends Service {
+
+
     private static final String LOG_TAG = "ForegroundService";
+
+
+
 
     @Override
     public void onCreate() {
         super.onCreate();
     }
 
+
+
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(Constants.ACTION.STARTFOREGROUND_ACTION)) {
             Log.i(LOG_TAG, "Received Start Foreground Intent ");
 
-
-            Intent notificationIntent = new Intent(this, MainActivity.class);
-            notificationIntent.setAction(Constants.ACTION.MAIN_ACTION);
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                    | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-
+            /* icon that will be displayed in the notification */
             Bitmap icon = BitmapFactory.decodeResource(getResources(),
                     R.mipmap.green_icon);
 
+            /* intent to resume DJ Glovie at the connected screen activity */
+            Intent notifyIntent = new Intent(this, UartActivity.class);
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notifyIntent, 0);
+
+            // set parameters for the notification that is going to be displayed
+            /**************************************************************************************/
             Notification notification = new NotificationCompat.Builder(this)
-                    .setContentTitle("DJ Glovi")
-                    .setContentText("Currently connected")
+                    .setContentTitle("DJ Glovie")
+                    .setContentText("Connected")
                     .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentIntent(pendingIntent)
+                    .setPriority(Notification.PRIORITY_MIN) // only displays when notification bar is swiped down (good idea?)
                     .setLargeIcon(
                             Bitmap.createScaledBitmap(icon, 128, 128, false))
                     .setOngoing(true).build();
-
+            /**************************************************************************************/
 
 
             startForeground(Constants.NOTIFICATION_ID.FOREGROUND_SERVICE,
@@ -55,11 +68,17 @@ public class ForegroundService extends Service {
         return START_STICKY;
     }
 
+
+
+
     @Override
     public void onDestroy() {
         super.onDestroy();
         Log.i(LOG_TAG, "In onDestroy");
     }
+
+
+
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -67,4 +86,7 @@ public class ForegroundService extends Service {
         return null;
     }
 
-}
+
+
+
+} // end class ForegroundService

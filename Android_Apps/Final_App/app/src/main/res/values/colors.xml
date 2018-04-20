@@ -8,4 +8,17 @@
     //<color name="colorPrimaryDark">#0E2F44</color>
     <color name="colorAccent">#FF4081</color>
 
+
+    <color name="button_pressed_connect_disconnect">#4299f0</color>
+    <color name="button_focused_connect_disconnect">#4299f0</color>
+    <color name="button_default_connect_disconnect">#000000</color>
+
+
+    <color name="button_pressed_other">#4299f0</color>
+    <color name="button_focused_other">#4299f0</color>
+    <color name="button_default_other">#e6e6e6</color>
+
+
+
+
 </resources>

@@ -14,6 +14,8 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 
 public class UartInterfaceActivity extends AppCompatActivity implements BleManager.BleManagerListener {
+
+
     // Log
     private final static String TAG = UartInterfaceActivity.class.getSimpleName();
 
@@ -27,42 +29,33 @@ public class UartInterfaceActivity extends AppCompatActivity implements BleManag
     private boolean isRxNotificationEnabled = false;
 
 
-
-    // region SendDataWithCompletionHandler
     protected interface SendDataCompletionHandler {
         void sendDataResponse(String data);
     }
+
 
     final private Handler sendDataTimeoutHandler = new Handler();
     private Runnable sendDataRunnable = null;
     private SendDataCompletionHandler sendDataCompletionHandler = null;
 
-    // endregion
 
-    @Override
-    public void onConnected() {
 
-    }
-
-    @Override
-    public void onConnecting() {
-
-    }
-
-    @Override
-    public void onDisconnected() {
-
-    }
 
     @Override
     public void onServicesDiscovered() {
         mUartService = mBleManager.getGattService(UUID_SERVICE);
     }
 
+
+
+
     protected void enableRxNotifications() {
         isRxNotificationEnabled = true;
         mBleManager.enableNotification(mUartService, UUID_RX, true);
     }
+
+
+
 
     @Override
     public void onDataAvailable(BluetoothGattCharacteristic characteristic) {
@@ -88,13 +81,37 @@ public class UartInterfaceActivity extends AppCompatActivity implements BleManag
         }
     }
 
-    @Override
-    public void onDataAvailable(BluetoothGattDescriptor descriptor) {
 
-    }
+
 
     @Override
-    public void onReadRemoteRssi(int rssi) {
+    public void onDataAvailable(BluetoothGattDescriptor descriptor) {}
 
-    }
-}
+
+
+
+    @Override
+    public void onReadRemoteRssi(int rssi) {}
+
+
+
+
+    @Override
+    public void onConnected() {}
+
+
+
+
+    @Override
+    public void onConnecting() {}
+
+
+
+
+    @Override
+    public void onDisconnected() {}
+
+
+
+
+} // end class UartInterfaceActivity
