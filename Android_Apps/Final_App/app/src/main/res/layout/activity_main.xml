@@ -43,6 +43,7 @@
         android:background="@drawable/button_background_other"
         android:onClick="aboutClick"
         android:text="@string/button_about"
+        app:layout_constraintHorizontal_bias="0.945"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -56,27 +57,9 @@
         android:background="@drawable/button_background_other"
         android:onClick="helpClick"
         android:text="@string/button_help"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/contact_button"
-        app:layout_constraintHorizontal_bias="0.9"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <Button
-        android:id="@+id/contact_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginRight="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/button_background_other"
-        android:onClick="contactClick"
-        android:text="@string/button_contact"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/help_button"
         app:layout_constraintTop_toTopOf="parent" />
 
     <android.support.constraint.Guideline
