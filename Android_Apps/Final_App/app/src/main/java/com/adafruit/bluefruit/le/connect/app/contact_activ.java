@@ -78,7 +78,7 @@ public class contact_activ extends AppCompatActivity {
                 // create intent to send email and fill it with necessary data
                 Intent sendEmail = new Intent(Intent.ACTION_SEND)
                     .setType("plain/text")
-                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"dtm7c@uvawise.edu", "led7t@uvawise.edu", "mcs2hw@uvawise.edu"})
+                    .putExtra(Intent.EXTRA_EMAIL, new String[]{"djgloviehelp@gmail.com"})
                     .putExtra(Intent.EXTRA_SUBJECT, subject)
                     .putExtra(Intent.EXTRA_TEXT, message);
 
