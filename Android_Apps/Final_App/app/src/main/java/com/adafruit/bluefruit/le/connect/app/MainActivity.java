@@ -20,6 +20,7 @@ import android.provider.Settings;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -96,6 +97,8 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         /****************************************************/
         Context context = getApplicationContext();
         CharSequence text;
+        int xOffset = 0;
+        int yOffset = 220; // places toast between icon and connect button when gravity is set to center
         int duration = Toast.LENGTH_SHORT;
         /****************************************************/
 
@@ -103,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
         if (BleUtils.getBleStatus(this) != BleUtils.STATUS_BLE_ENABLED) {
             text = "Bluetooth is not enabled";
             Toast toast = Toast.makeText(context, text, duration);
+            toast.setGravity(Gravity.CENTER, xOffset, yOffset);
             toast.show();
         } else {
             // consult our list of nearby devices that gathered through scanning
@@ -128,12 +132,14 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
                     autostartScan();
                     text = "Glove not detected";
                     Toast toast = Toast.makeText(context, text, duration);
+                    toast.setGravity(Gravity.CENTER, xOffset, yOffset);
                     toast.show();
                 }
             } else {
                 autostartScan();
                 text = "Glove not detected";
                 Toast toast = Toast.makeText(context, text, duration);
+                toast.setGravity(Gravity.CENTER, xOffset, yOffset);
                 toast.show();
             }
         }
