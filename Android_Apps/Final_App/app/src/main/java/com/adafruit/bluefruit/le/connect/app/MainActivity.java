@@ -166,15 +166,6 @@ public class MainActivity extends AppCompatActivity implements BleManager.BleMan
 
 
 
-    public void contactClick (View view)
-    {
-        Intent contact_intent = new Intent(this,contact_activ.class);
-        startActivity(contact_intent);
-    }
-
-
-
-
     /* disable android hardware back button */
     @Override
     public void onBackPressed() { }
