@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center_horizontal"
     android:orientation="vertical"
     android:paddingBottom="16dp"
     android:paddingLeft="16dp"
@@ -13,10 +10,30 @@
     tools:context=".app.about_activ">
 
 
-    <WebView
-        android:id="@+id/infoWebView"
+    <VideoView
+        android:id="@+id/video_view"
+        android:layout_width="fill_parent"
+        android:layout_marginTop="20dp"
+        android:layout_height="fill_parent" />
+
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp"/>
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:text="Tap the black box above to watch a tutorial. If it does not help you, tap the contact button below."
+        android:textSize="20dp"/>
+
+    <Button
+        android:id="@+id/contact_button"
+        style="@android:style/Widget.Button"
+        android:layout_width="146dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/button_background_other"
+        android:onClick="contactClick"
+        android:text="CONTACT US"
+        tools:ignore="OnClick"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="20dp"
+        tools:text="@string/button_contact" />
 
 </LinearLayout>
